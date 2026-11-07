@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Kiess — Découvrez qui vous rencontrez</title>
-    <meta name="description" content="Kiess, l’app de rencontre où la photo se mérite : une voix, une phrase, des passions, puis son visage révélé case par case. Préinscris-toi." />
+    <meta name="description" content="Kiess, l’app de rencontre où la photo se mérite : une voix, une phrase, des passions, puis son visage révélé case par case. Inscris-toi." />
     <link rel="canonical" href="__SITE_URL__/" />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#ffffff" />
@@ -17,14 +17,14 @@
     <meta property="og:locale" content="fr_FR" />
     <meta property="og:url" content="__SITE_URL__/" />
     <meta property="og:title" content="Kiess — Découvrez qui vous rencontrez" />
-    <meta property="og:description" content="L’app de rencontre où la photo se mérite. Préinscriptions ouvertes." />
+    <meta property="og:description" content="L’app de rencontre où la photo se mérite. Inscriptions ouvertes." />
     <meta property="og:image" content="__SITE_URL__/og-kiess.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="Kiess, l’app de rencontre où la photo se mérite" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Kiess — Découvrez qui vous rencontrez" />
-    <meta name="twitter:description" content="L’app de rencontre où la photo se mérite. Préinscriptions ouvertes." />
+    <meta name="twitter:description" content="L’app de rencontre où la photo se mérite. Inscriptions ouvertes." />
     <meta name="twitter:image" content="__SITE_URL__/og-kiess.jpg" />
     <!--seo:jsonld-->
   </head>
@@ -50,7 +50,7 @@
         <a href="#securite">Sécurité</a>
         <a href="#faq">FAQ</a>
       </nav>
-      <button class="btn btn-grad btn-sm" data-open-beta type="button">Préinscription</button>
+      <button class="btn btn-grad btn-sm" data-open-signup type="button">S’inscrire</button>
     </header>
 
     <main id="main">
@@ -59,7 +59,7 @@
         <div class="hero-glow" aria-hidden="true"></div>
         <div class="hero-grid wrap">
         <div class="hero-inner">
-          <p class="eyebrow hero-reveal"><span class="dot"></span> Préinscriptions ouvertes</p>
+          <p class="eyebrow hero-reveal"><span class="dot"></span> Inscriptions ouvertes</p>
           <h1 class="hero-title" aria-label="Découvrez qui vous rencontrez.">
             <span class="line"><span class="hero-reveal">Découvrez</span></span>
             <span class="line"><span class="hero-reveal thin">qui vous</span></span>
@@ -67,7 +67,7 @@
           </h1>
           <p class="hero-lead hero-reveal">Sur Kiess, la photo se mérite. Tu découvres d’abord une voix, une phrase, des passions. Puis, message après message, son visage se dévoile.</p>
           <div class="hero-ctas hero-reveal">
-            <button class="btn btn-grad" data-open-beta type="button">Je me préinscris</button>
+            <button class="btn btn-grad" data-open-signup type="button">Je m’inscris</button>
             <a class="btn btn-ghost" href="#concept">Comment ça marche</a>
           </div>
           <p class="hero-meta hero-reveal">Bientôt sur iPhone &amp; Android</p>
@@ -402,15 +402,15 @@
         </div>
       </section>
 
-      <!-- PRÉINSCRIPTION -->
-      <section class="join" id="preinscription" data-heart="0.3,0.02,0.55,0" data-heart-m="0,0.27,0.3,0">
+      <!-- INSCRIPTION -->
+      <section class="join" id="inscription" data-heart="0.3,0.02,0.55,0" data-heart-m="0,0.27,0.3,0">
         <div class="wrap">
           <div class="join-card">
-            <p class="eyebrow eyebrow-light">Préinscription</p>
+            <p class="eyebrow eyebrow-light">Inscription</p>
             <h2 class="join-title">Sois parmi les premiers utilisateurs.</h2>
-            <p class="join-text">Kiess arrive bientôt sur iPhone et Android. Préinscris-toi en une minute : on te prévient par mail dès que ton accès est prêt.</p>
-            <button class="btn btn-white btn-xl" data-open-beta type="button"><span class="grad-text">Je me préinscris</span></button>
-            <p class="join-small">1 minute · sans engagement</p>
+            <p class="join-text">Crée ton compte ici, avec Apple, Google, Facebook, Discord ou ton numéro&nbsp;: c’est le même compte que dans l’app Kiess, sur iPhone et Android.</p>
+            <button class="btn btn-white btn-xl" data-open-signup type="button"><span class="grad-text">Je m’inscris</span></button>
+            <p class="join-small">Quelques minutes · sans engagement</p>
           </div>
         </div>
       </section>
@@ -458,6 +458,7 @@
           <p class="tagline"><b>Découvrez</b> qui vous <b>rencontrez</b></p>
         </div>
         <nav class="footer-links" aria-label="Liens légaux">
+          <a href="/cgu/">Conditions générales</a>
           <a href="/mentions-legales/">Mentions légales</a>
           <a href="/confidentialite/">Confidentialité</a>
           <a data-support-link href="mailto:support@kiess.fr">Contact</a>
@@ -466,61 +467,126 @@
       </div>
     </footer>
 
-    <!-- FORMULAIRE DE PRÉINSCRIPTION -->
-    <dialog class="beta-dialog" id="betaDialog" aria-labelledby="betaDialogTitle">
+    <!-- INSCRIPTION : même parcours et même compte que l'app (src/signup/) -->
+    <dialog class="beta-dialog" id="signupDialog" aria-labelledby="signupTitle">
       <div class="bd-card">
         <div class="bd-top">
-          <button type="button" class="bd-back" id="bdBack" aria-label="Étape précédente"><span class="chev"></span></button>
-          <div class="bd-progress" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
-          <button type="button" class="bd-close" id="bdClose" aria-label="Fermer">×</button>
+          <button type="button" class="bd-back" id="suBack" aria-label="Étape précédente"><span class="chev"></span></button>
+          <div class="su-progress" id="suProgress" aria-hidden="true"><i></i></div>
+          <button type="button" class="bd-close" id="suClose" aria-label="Fermer">×</button>
         </div>
-        <p class="sr-only" id="betaDialogTitle">Préinscription à Kiess</p>
-        <p class="sr-only" aria-live="polite" id="bdLive"></p>
+        <p class="sr-only" id="signupTitle">Inscription à Kiess</p>
+        <p class="sr-only" aria-live="polite" id="suLive"></p>
 
-        <form id="betaForm" novalidate>
-          <!-- pot de miel -->
-          <div class="hp" aria-hidden="true">
-            <label>Ne pas remplir <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
-          </div>
+        <form id="signupForm" novalidate>
+          <!-- Bienvenue : conditions + façon de s'inscrire -->
+          <fieldset class="bd-step is-active" data-step="welcome">
+            <legend class="bd-title"><span>Bienvenue</span> sur Kiess,</legend>
+            <p class="bd-lead">Crée ton compte en quelques minutes. C’est le même compte que dans l’app&nbsp;: tu t’y connecteras directement.</p>
+            <label class="check su-terms">
+              <input type="checkbox" name="acceptedTerms" />
+              <span class="box" aria-hidden="true"></span>
+              <span>J’ai lu et j’accepte les <a href="/cgu/" target="_blank" rel="noopener">conditions générales</a> et la <a href="/confidentialite/" target="_blank" rel="noopener">politique de confidentialité</a></span>
+            </label>
+            <div class="su-methods">
+              <button type="button" class="su-method" data-method="apple">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701"/></svg>
+                <span>Continuer avec Apple</span>
+              </button>
+              <button type="button" class="su-method" data-method="google">
+                <svg viewBox="0 0 20 20" aria-hidden="true"><path fill="currentColor" d="M10.0026 2C5.58327 2 2 5.582 2 10C2 14.418 5.58327 18 10.0026 18C16.6759 18 18.1794 11.8047 17.5534 8.66667H16.6667H15.1549H10V11.3333H15.1589C14.5658 13.6322 12.484 15.3333 10 15.3333C7.05467 15.3333 4.66667 12.9453 4.66667 10C4.66667 7.05467 7.05467 4.66667 10 4.66667C11.3393 4.66667 12.5594 5.16383 13.4961 5.97917L15.3906 4.08594C13.968 2.78994 12.0779 2 10.0026 2Z"/></svg>
+                <span>Continuer avec Google</span>
+              </button>
+              <button type="button" class="su-method" data-method="facebook">
+                <svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M14.5455 0H1.45455C0.650909 0 0 0.650909 0 1.45455V14.5455C0 15.3491 0.650909 16 1.45455 16H8.72727V9.45455H6.54545V7.27273H8.72727V6.10109C8.72727 3.88291 9.808 2.90909 11.6516 2.90909C12.5345 2.90909 13.0015 2.97455 13.2225 3.00436V5.09091H11.9651C11.1825 5.09091 10.9091 5.504 10.9091 6.34036V7.27273H13.2029L12.8916 9.45455H10.9091V16H14.5455C15.3491 16 16 15.3491 16 14.5455V1.45455C16 0.650909 15.3484 0 14.5455 0Z"/></svg>
+                <span>Continuer avec Facebook</span>
+              </button>
+              <button type="button" class="su-method" data-method="discord">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M20.317 4.3698a19.7913 19.7913 0 00-4.8851-1.5152.0741.0741 0 00-.0785.0371c-.211.3753-.4447.8648-.6083 1.2495-1.8447-.2762-3.68-.2762-5.4868 0-.1636-.3933-.4058-.8742-.6177-1.2495a.077.077 0 00-.0785-.037 19.7363 19.7363 0 00-4.8852 1.515.0699.0699 0 00-.0321.0277C.5334 9.0458-.319 13.5799.0992 18.0578a.0824.0824 0 00.0312.0561c2.0528 1.5076 4.0413 2.4228 5.9929 3.0294a.0777.0777 0 00.0842-.0276c.4616-.6304.8731-1.2952 1.226-1.9942a.076.076 0 00-.0416-.1057c-.6528-.2476-1.2743-.5495-1.8722-.8923a.077.077 0 01-.0076-.1277c.1258-.0943.2517-.1923.3718-.2914a.0743.0743 0 01.0776-.0105c3.9278 1.7933 8.18 1.7933 12.0614 0a.0739.0739 0 01.0785.0095c.1202.099.246.1981.3728.2924a.077.077 0 01-.0066.1276 12.2986 12.2986 0 01-1.873.8914.0766.0766 0 00-.0407.1067c.3604.698.7719 1.3628 1.225 1.9932a.076.076 0 00.0842.0286c1.961-.6067 3.9495-1.5219 6.0023-3.0294a.077.077 0 00.0313-.0552c.5004-5.177-.8382-9.6739-3.5485-13.6604a.061.061 0 00-.0312-.0286zM8.02 15.3312c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9555-2.4189 2.157-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.9555 2.4189-2.1569 2.4189zm7.9748 0c-1.1825 0-2.1569-1.0857-2.1569-2.419 0-1.3332.9554-2.4189 2.1569-2.4189 1.2108 0 2.1757 1.0952 2.1568 2.419 0 1.3332-.946 2.4189-2.1568 2.4189Z"/></svg>
+                <span>Continuer avec Discord</span>
+              </button>
+              <p class="su-or" aria-hidden="true"><span>ou</span></p>
+              <button type="button" class="su-method" data-method="phone">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.6" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M10.5 18.2h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span>Continuer avec mon numéro</span>
+              </button>
+            </div>
+            <p class="bd-error" data-error></p>
+          </fieldset>
 
-          <!-- 1. E-mail -->
-          <fieldset class="bd-step is-active" data-step="0">
+          <!-- Numéro de téléphone -->
+          <fieldset class="bd-step" data-step="phone">
+            <legend class="bd-title"><span>Ton</span> numéro de téléphone</legend>
+            <label class="field">
+              <span class="sr-only">Numéro de téléphone</span>
+              <input type="tel" name="phone" placeholder="06 12 34 56 78" autocomplete="tel" inputmode="tel" />
+            </label>
+            <p class="bd-hint">Un SMS de confirmation te sera envoyé.</p>
+            <p class="bd-error" data-error></p>
+          </fieldset>
+
+          <!-- Code SMS -->
+          <fieldset class="bd-step" data-step="phoneCode">
+            <legend class="bd-title"><span>Validation du code</span> reçu par SMS</legend>
+            <label class="field">
+              <span class="sr-only">Code de vérification à 6 chiffres</span>
+              <input type="text" name="otp" placeholder="000000" autocomplete="one-time-code" inputmode="numeric" maxlength="6" />
+            </label>
+            <p class="bd-hint">Envoyé au <b id="suPhoneEcho"></b>. Pas reçu&nbsp;? Reviens en arrière pour le renvoyer.</p>
+            <p class="bd-hint su-devcode" id="suDevCode" hidden></p>
+            <p class="bd-error" data-error></p>
+          </fieldset>
+
+          <!-- E-mail -->
+          <fieldset class="bd-step" data-step="email">
             <legend class="bd-title"><span>Ton</span> adresse mail</legend>
             <label class="field">
               <span class="sr-only">Adresse e-mail</span>
-              <input type="email" name="email" placeholder="toi@exemple.fr" autocomplete="email" inputmode="email" required />
+              <input type="email" name="email" placeholder="toi@exemple.fr" autocomplete="email" inputmode="email" />
             </label>
-            <p class="bd-hint">C’est là qu’on te préviendra quand ton accès sera prêt.</p>
             <label class="check">
               <input type="checkbox" name="marketingOptIn" />
               <span class="box" aria-hidden="true"></span>
-              <span>J’accepte de recevoir les actualités de Kiess par e-mail (désinscription à tout moment)</span>
+              <span>J’accepte de recevoir des communications de Kiess (désinscription à tout moment)</span>
             </label>
             <p class="bd-error" data-error></p>
           </fieldset>
 
-          <!-- 2. Mot de passe -->
-          <fieldset class="bd-step" data-step="1">
-            <legend class="bd-title"><span>Ton</span> mot de passe</legend>
-            <label class="field field-pw">
-              <span class="sr-only">Mot de passe</span>
-              <input type="password" name="password" placeholder="Mot de passe" autocomplete="new-password" required />
-              <button type="button" class="pw-toggle" data-pw-toggle aria-label="Afficher le mot de passe">Voir</button>
-            </label>
+          <!-- Prénom -->
+          <fieldset class="bd-step" data-step="firstName">
+            <legend class="bd-title"><span>Ton</span> prénom</legend>
             <label class="field">
-              <span class="sr-only">Confirmation du mot de passe</span>
-              <input type="password" name="passwordConfirm" placeholder="Confirmation" autocomplete="new-password" required />
+              <span class="sr-only">Prénom</span>
+              <input type="text" name="firstName" placeholder="Prénom" autocomplete="given-name" autocapitalize="words" maxlength="60" />
             </label>
-            <ul class="pw-rules" id="pwRules">
-              <li data-rule="len">8 caractères minimum</li>
-              <li data-rule="upper">Une majuscule</li>
-              <li data-rule="digit">Un chiffre</li>
-            </ul>
+            <p class="bd-hint">Ton prénom n’apparaîtra pas sur ton profil.</p>
             <p class="bd-error" data-error></p>
           </fieldset>
 
-          <!-- 3. Genre -->
-          <fieldset class="bd-step" data-step="2">
+          <!-- Nom -->
+          <fieldset class="bd-step" data-step="lastName">
+            <legend class="bd-title"><span>Ton</span> nom</legend>
+            <label class="field">
+              <span class="sr-only">Nom</span>
+              <input type="text" name="lastName" placeholder="Nom" autocomplete="family-name" autocapitalize="words" maxlength="60" />
+            </label>
+            <p class="bd-hint">Ton nom n’apparaîtra pas sur ton profil.</p>
+            <p class="bd-error" data-error></p>
+          </fieldset>
+
+          <!-- Pseudo -->
+          <fieldset class="bd-step" data-step="username">
+            <legend class="bd-title"><span>Ton</span> pseudo</legend>
+            <label class="field">
+              <span class="sr-only">Pseudo</span>
+              <input type="text" name="username" placeholder="Pseudo" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="20" />
+            </label>
+            <p class="bd-hint">C’est le prénom qui apparaîtra sur ton profil (2 à 20 caractères&nbsp;: lettres, chiffres, . _ -).</p>
+            <p class="bd-error" data-error></p>
+          </fieldset>
+
+          <!-- Genre -->
+          <fieldset class="bd-step" data-step="gender">
             <legend class="bd-title">Tu es...</legend>
             <div class="choices" role="radiogroup" aria-label="Ton genre">
               <label class="choice"><input type="radio" name="gender" value="un homme" /><span>un homme</span></label>
@@ -532,48 +598,89 @@
             <p class="bd-error" data-error></p>
           </fieldset>
 
-          <!-- 4. Recherche -->
-          <fieldset class="bd-step" data-step="3">
-            <legend class="bd-title">Tu cherches...</legend>
-            <div class="choices" aria-label="Qui tu cherches">
-              <label class="choice"><input type="checkbox" name="preferences" value="homme" /><span>des hommes</span></label>
-              <label class="choice"><input type="checkbox" name="preferences" value="femme" /><span>des femmes</span></label>
-              <label class="choice"><input type="checkbox" name="preferences" value="nb" /><span>des personnes non binaires</span></label>
-              <label class="choice"><input type="checkbox" name="preferencesAll" value="all" /><span>tout le monde</span></label>
-            </div>
-            <p class="bd-hint">Plusieurs choix possibles.</p>
-            <p class="bd-error" data-error></p>
-          </fieldset>
-
-          <!-- 5. Date de naissance + CGU -->
-          <fieldset class="bd-step" data-step="4">
+          <!-- Date de naissance -->
+          <fieldset class="bd-step" data-step="birthDate">
             <legend class="bd-title"><span>Ta date</span> de naissance</legend>
             <label class="field">
               <span class="sr-only">Date de naissance, jour mois année</span>
-              <input type="text" name="birthDate" placeholder="JJ/MM/AAAA" inputmode="numeric" autocomplete="bday" maxlength="10" required />
+              <input type="text" name="birthDate" placeholder="JJ/MM/AAAA" inputmode="numeric" autocomplete="bday" maxlength="10" />
             </label>
-            <p class="bd-hint">Tu dois être majeur·e pour utiliser Kiess.</p>
-            <label class="check">
-              <input type="checkbox" name="acceptedTerms" required />
-              <span class="box" aria-hidden="true"></span>
-              <span>J’accepte que Kiess utilise ces informations, y compris mes préférences de rencontre, pour sélectionner les premiers utilisateurs et me prévenir de l’ouverture (<a href="/confidentialite/" target="_blank" rel="noopener">politique de confidentialité</a>)</span>
+            <p class="bd-hint">Tu dois être majeur·e dans ton pays pour utiliser Kiess.</p>
+            <p class="bd-error" data-error></p>
+          </fieldset>
+
+          <!-- Ville -->
+          <fieldset class="bd-step" data-step="city">
+            <legend class="bd-title">Tu vis à...</legend>
+            <label class="field">
+              <span class="sr-only">Ville</span>
+              <input type="text" name="city" placeholder="Ville" autocomplete="address-level2" autocapitalize="words" maxlength="80" />
             </label>
             <p class="bd-error" data-error></p>
           </fieldset>
 
-          <!-- Succès -->
-          <div class="bd-step bd-success" data-step="5" tabindex="-1">
-            <div class="bd-hearts" id="bdHearts" aria-hidden="true"></div>
-            <p class="bd-success-eyebrow">Préinscription</p>
-            <p class="bd-success-title">Envoyée</p>
+          <!-- Mot de passe -->
+          <fieldset class="bd-step" data-step="password">
+            <legend class="bd-title"><span>Ton</span> mot de passe</legend>
+            <label class="field field-pw">
+              <span class="sr-only">Créer un mot de passe</span>
+              <input type="password" name="password" placeholder="Mot de passe" autocomplete="new-password" />
+              <button type="button" class="pw-toggle" data-pw-toggle aria-label="Afficher le mot de passe">Voir</button>
+            </label>
+            <label class="field">
+              <span class="sr-only">Confirmer le mot de passe</span>
+              <input type="password" name="passwordConfirm" placeholder="Confirmer mot de passe" autocomplete="new-password" />
+            </label>
+            <ul class="pw-rules" id="suPwRules">
+              <li data-rule="len">8 caractères minimum</li>
+              <li data-rule="upper">Une majuscule</li>
+              <li data-rule="digit">Un chiffre</li>
+            </ul>
+            <p class="bd-error" data-error></p>
+          </fieldset>
+
+          <!-- Photo -->
+          <fieldset class="bd-step" data-step="photo">
+            <legend class="bd-title"><span>Ajoute une photo</span> de profil</legend>
+            <label class="su-photo" id="suPhotoPick">
+              <input type="file" name="photo" accept="image/jpeg,image/png,image/webp,image/heic,image/heif" class="sr-only" />
+              <span class="su-photo-box">
+                <img id="suPhotoPreview" alt="Ta photo de profil" hidden />
+                <span class="su-photo-plus" aria-hidden="true">+</span>
+              </span>
+              <span class="su-photo-label" id="suPhotoLabel">Choisir une photo</span>
+            </label>
+            <p class="bd-hint">Un vrai visage, le tien, bien visible&nbsp;: chaque photo est vérifiée.</p>
+            <p class="bd-error" data-error></p>
+          </fieldset>
+
+          <!-- Compte créé -->
+          <div class="bd-step bd-success" data-step="success" tabindex="-1">
+            <div class="bd-hearts" id="suHearts" aria-hidden="true"></div>
+            <p class="bd-success-eyebrow">Bravo&nbsp;!</p>
+            <p class="bd-success-title">Compte créé</p>
             <div class="bd-success-mark" data-logo="mark-white"></div>
-            <p class="bd-success-text">Merci&nbsp;! On te prévient par mail dès que ton accès à Kiess est prêt.</p>
-            <p class="bd-demo" id="bdDemo" hidden>Mode démo : aucun backend branché, rien n’a été envoyé.</p>
-            <button type="button" class="btn btn-white" id="bdDone"><span class="grad-text">Super</span></button>
+            <p class="bd-success-text" id="suSuccessText">Tu as terminé ton inscription.</p>
+            <ul class="su-advice">
+              <li>Sois toi-même</li>
+              <li>Tes informations sont précieuses</li>
+              <li>Sois respectueux(se) et bienveillant(e)</li>
+            </ul>
+            <p class="bd-demo" id="suDemo" hidden>Mode démo : aucune API branchée, aucun compte n’a été créé.</p>
+            <button type="button" class="btn btn-white" data-close><span class="grad-text">Super</span></button>
           </div>
 
-          <div class="bd-actions" id="bdActions">
-            <button type="submit" class="btn btn-white btn-continue" id="bdNext"><span class="grad-text" id="bdNextLabel">Continuer</span></button>
+          <!-- Compte déjà existant -->
+          <div class="bd-step bd-success" data-step="existing" tabindex="-1">
+            <p class="bd-success-eyebrow">Content de te revoir</p>
+            <p class="bd-success-title">Déjà inscrit·e</p>
+            <div class="bd-success-mark" data-logo="mark-white"></div>
+            <p class="bd-success-text" id="suExistingText">Tu as déjà un compte Kiess.</p>
+            <button type="button" class="btn btn-white" data-close><span class="grad-text">OK</span></button>
+          </div>
+
+          <div class="bd-actions" id="suActions">
+            <button type="submit" class="btn btn-white btn-continue" id="suNext"><span class="grad-text" id="suNextLabel">Continuer</span></button>
           </div>
         </form>
       </div>

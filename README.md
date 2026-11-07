@@ -1,123 +1,88 @@
-# Kiess — site vitrine & préinscription
+# Kiess — site vitrine & inscription
 
-Site statique (Vite + TypeScript + Three.js + GSAP + Lenis) en français : page d'accueil,
-mentions légales, politique de confidentialité, page 404.
+Site statique (Vite + TypeScript + Three.js + GSAP + Lenis) en français : page d’accueil,
+conditions générales, politique de confidentialité, mentions légales, page 404.
 
-Les préinscriptions sont enregistrées, par défaut, **dans la base MySQL de l'hébergement
-Hostinger** par le script livré avec le site (`public/api/preinscription.php`). Quand l'API
-Kiess sera en ligne, une seule variable (`VITE_API_URL`) bascule le formulaire vers
-`POST /pre-registrations` (module [`api/src/pre-registrations`](../api/src/pre-registrations),
-table Postgres `PreRegistration`). Les deux appliquent exactement les mêmes règles.
+**L’inscription du site est celle de l’app.** Même parcours (`mobile/screens/onboarding`),
+mêmes règles, mêmes routes de l’API Kiess : un compte créé sur le site est un compte de l’app,
+dans lequel on se connecte ensuite directement (Apple, Google, Facebook, Discord, ou e-mail /
+pseudo + mot de passe).
+
+```
+accueil : conditions + façon de s’inscrire
+  ├─ Apple · Google · Facebook · Discord ─────────────┐
+  └─ numéro de téléphone → code SMS ──────────────────┤
+e-mail → prénom → nom → pseudo → genre → date de naissance → ville → mot de passe → photo
+→ POST /auth/complete-signup → « Bravo ! »            (compte déjà complet → « Déjà inscrit·e »)
+```
 
 ## Lancer
 
 ```bash
 cd web
 npm install
-npm run dev        # http://localhost:5173 (formulaire en mode démo : rien n'est envoyé)
+npm run dev        # http://localhost:5173 (sans VITE_API_URL : mode démo, aucun compte créé)
 npm run build      # typecheck + build → dist/
-npm run preview    # sert dist/ avec les mêmes en-têtes de sécurité qu'en production
+npm run preview    # sert dist/ avec les mêmes en-têtes de sécurité qu’en production
 ```
 
-Node 20+ (testé avec Node 24).
+Node 20+ (testé avec Node 24). Pour tester avec une vraie API en local : lancer `api/`
+(`NODE_ENV=development`, `CORS_ORIGINS=http://localhost:5173`) et mettre
+`VITE_API_URL=http://localhost:3000`. En développement, un fournisseur sans identifiant
+passe par les jetons de test de l’API (`dev_token_…`), et le code SMS s’affiche sous le champ.
 
-## Variables d'environnement
+## Variables d’environnement
 
 Copier `.env.example` en `.env`. Les variables `VITE_*` sont injectées **au build**.
 
 | Clé | Rôle |
 | --- | --- |
-| `VITE_SITE_URL` | Adresse publique du site (défaut `https://kiess.fr`) : balises canonical, Open Graph, sitemap. |
-| `VITE_API_URL` | Facultatif. Si renseignée, le formulaire poste sur `{VITE_API_URL}/pre-registrations` au lieu du script PHP. **Ajouter alors ce domaine à `connect-src`** dans `public/.htaccess` (CSP). |
-| `VITE_BETA_ENDPOINT` | Facultatif : URL complète du formulaire, prioritaire sur tout le reste. |
+| `VITE_SITE_URL` | Adresse publique du site (défaut `https://kiess.fr`) : canonical, Open Graph, sitemap. |
+| `VITE_API_URL` | **Obligatoire en production.** Adresse de l’API Kiess (la même que l’app). Ajoutée à la CSP (`connect-src`). |
+| `VITE_UPLOADS_ORIGIN` | Origine des URL présignées S3 / R2 des photos (ex. `https://<compte>.r2.cloudflarestorage.com`). Ajoutée à la CSP. |
+| `VITE_GOOGLE_CLIENT_ID` | ID client OAuth Google « Application Web ». Vide : bouton masqué. |
+| `VITE_APPLE_SERVICES_ID` | Services ID « Sign in with Apple » du site. Vide : bouton masqué. |
+| `VITE_FACEBOOK_APP_ID` | ID de l’application Meta (la même que l’app). Vide : bouton masqué. |
+| `VITE_DISCORD_CLIENT_ID` | Client ID de l’application Discord. Vide : bouton masqué. |
 
-## Mise en ligne sur Hostinger (hébergement web)
+## Connexions sociales
 
-1. **Base de données** — hPanel → Bases de données → Gestion : créer une base MySQL et
-   son utilisateur (noter nom de base, utilisateur, mot de passe).
-2. **Identifiants** — gestionnaire de fichiers : dans le dossier du domaine, **à côté** de
-   `public_html` (pas dedans), créer `kiess-config.php` à partir de
-   [`server/kiess-config.exemple.php`](server/kiess-config.exemple.php). Ainsi les
-   identifiants ne sont jamais accessibles depuis le web.
-   ```
-   domains/kiess.fr/
-   ├── kiess-config.php   ← ici
-   └── public_html/       ← contenu de dist/
-   ```
-3. **Site** — `npm run build`, puis envoyer le **contenu** de `dist/` dans `public_html`
-   (fichiers cachés `.htaccess` compris).
-4. **PHP** — hPanel → Avancé → Configuration PHP : version 8.1 ou plus.
-5. **SSL** — hPanel → Sécurité → SSL : certificat actif. Le `.htaccess` force déjà le HTTPS.
-6. **Test** — faire une préinscription : les tables `preinscriptions` et
-   `preinscription_limites` se créent toutes seules à la première demande.
-7. **Référencement** — déclarer `https://kiess.fr/sitemap.xml` dans Google Search Console.
+Sans script tiers (la CSP reste `script-src 'self'`) : la page part chez le fournisseur et revient
+sur l’accueil (`src/signup/oauth.ts`). `state` (anti-CSRF) et `nonce` vérifiés au retour, réponse
+retirée de l’adresse aussitôt lue, puis envoyée à l’API qui la vérifie :
 
-### Sélectionner les profils (phpMyAdmin)
+| Fournisseur | Retour | Route API | Réglages API |
+| --- | --- | --- | --- |
+| Google | `id_token` | `POST /auth/google` | ajouter le client web à `GOOGLE_CLIENT_IDS` |
+| Apple | `id_token` | `POST /auth/apple` | ajouter le Services ID à `APPLE_CLIENT_IDS` |
+| Facebook | jeton d’accès | `POST /auth/facebook` | `FACEBOOK_APP_ID` / `FACEBOOK_APP_SECRET` (même app) |
+| Discord | `code` | `POST /auth/discord` | `DISCORD_CLIENT_ID`, `DISCORD_CLIENT_SECRET`, `DISCORD_REDIRECT_URIS` |
 
-hPanel → Bases de données → phpMyAdmin → onglet SQL :
+Adresse de retour à déclarer chez chaque fournisseur : **`https://kiess.fr/`** (l’accueil), et
+`http://localhost:5173/` pour le développement. Apple exige aussi la vérification du domaine.
 
-```sql
--- Femmes de 20 à 30 ans en attente, premières inscrites d'abord
-SELECT id, email, gender, preferences, birth_date,
-       TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) AS age, source, created_at
-FROM preinscriptions
-WHERE status = 'pending' AND gender = 'une femme'
-  AND TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) BETWEEN 20 AND 30
-ORDER BY created_at;
+Le compte est retrouvé par fournisseur + identifiant : se connecter avec Google sur le site puis
+dans l’app ouvre le même compte, même si l’adresse saisie à l’inscription est différente.
 
--- Retenir des profils (pending → selected → invited ; ou rejected)
-UPDATE preinscriptions SET status = 'selected' WHERE id IN (12, 15, 31);
+## Mise en ligne
 
--- Répartition par statut et par genre
-SELECT status, gender, COUNT(*) FROM preinscriptions GROUP BY status, gender;
+1. **API** — l’API Kiess doit être en ligne (`render.yaml`), avec `CORS_ORIGINS` contenant
+   `https://kiess.fr` et les réglages des fournisseurs ci-dessus.
+2. **Build** — renseigner `.env` (au minimum `VITE_API_URL`), puis `npm run build`.
+3. **Hostinger** — envoyer le **contenu** de `dist/` dans `public_html` (avec le fichier caché
+   `.htaccess`, généré par le build depuis `htaccess.ts`). Ni base de données ni PHP : le site est
+   entièrement statique.
+4. **SSL** — hPanel → Sécurité → SSL : certificat actif. Le `.htaccess` force déjà le HTTPS.
+5. **Référencement** — déclarer `https://kiess.fr/sitemap.xml` dans Google Search Console.
 
--- Droit à l'effacement (demande reçue sur support@kiess.fr)
-DELETE FROM preinscriptions WHERE email = 'adresse@exemple.fr';
-```
+## Pages légales
 
-`preferences` : `homme,femme,nb` séparés par des virgules ; vide = « tout le monde ».
-Export CSV : phpMyAdmin → Exporter. Le mot de passe est stocké en **argon2id** avec les
-réglages de l'app (`api/src/auth/password.util.ts`) : ces comptes pourront être importés
-tels quels dans la table `PreRegistration` / `User` de l'API (vérifié avec `argon2.verify`).
-
-À faire au moment des invitations : le mail « ton accès est prêt » promis sur l'écran de
-succès, et la purge des préinscriptions de plus de 24 mois (durée annoncée dans la
-politique de confidentialité).
-
-## Contrat du formulaire
-
-Côté site : [`src/beta/submit.ts`](src/beta/submit.ts) (seul fichier qui parle au réseau).
-Côté serveur : [`public/api/preinscription.php`](public/api/preinscription.php) et
-[`CreatePreRegistrationDto`](../api/src/pre-registrations/dto/create-pre-registration.dto.ts) :
-toute clé inconnue est refusée, garder les trois alignés.
-
-```jsonc
-{
-  "email": "camille@exemple.fr",          // trim + minuscules
-  "password": "Kiess2026",                // 8 à 128 caractères, 1 majuscule, 1 chiffre
-  "gender": "une femme",                  // "un homme" | "une femme" | "non binaire" | "autres"
-  "preferences": ["homme"],               // sous-ensemble de "homme" | "femme" | "nb" ; [] = tout le monde
-  "birthDate": "1999-03-12",              // AAAA-MM-JJ, 18 ans minimum
-  "acceptedTerms": true,                  // consentement (politique de confidentialité, art. 9 RGPD)
-  "marketingOptIn": false,
-  "website": "",                          // pot de miel : si rempli, réponse 201 mais rien n'est enregistré
-  "source": { "utm_source": "instagram" },// facultatif (paramètres utm_* / ref de l'URL)
-  "submittedAt": "2026-11-07T10:00:00.000Z"
-}
-```
-
-| Statut | Cas | Affichage |
-| --- | --- | --- |
-| `201` | Enregistré, pot de miel rempli, ou e-mail déjà inscrit (PHP : ne révèle jamais qui est inscrit) | « Demande envoyée » |
-| `409` | E-mail déjà inscrit (API Nest uniquement) | « Cette adresse mail est déjà préinscrite. » |
-| `400` | Donnée refusée (moins de 18 ans, date impossible, mot de passe faible…) | `message` du corps |
-| `429` | Plus de 5 envois par minute (ou 30 par jour) depuis la même IP | « Trop de tentatives… » |
-| autre | Base indisponible, réseau | Message générique |
-
-Protections du script PHP : même origine uniquement (en-têtes `Origin` / `Sec-Fetch-Site`),
-JSON obligatoire, 8 Ko maximum, requêtes SQL préparées, limite par IP stockée sous forme
-d'empreinte HMAC 24 h (jamais l'adresse en clair), identifiants hors du dossier public,
-`api/.htaccess` qui n'expose que `preinscription.php`.
+`/cgu/` et `/confidentialite/` affichent **les textes de l’app**, générés au build depuis
+[`api/src/legal/legal-content.ts`](../api/src/legal/legal-content.ts) (`legal.ts`) : modifier ce
+fichier (et sa copie `mobile/legal/index.ts`), jamais les pages. La politique ajoute une section
+propre au site (connexion sociale, session temporaire, aucun cookie). **Les champs surlignés en
+jaune** (éditeur, adresse, SIRET, directeur de la publication, hébergeur de l’API, tribunal)
+**sont à compléter avant la mise en ligne.**
 
 ## SEO, sécurité, données
 
@@ -125,17 +90,15 @@ d'empreinte HMAC 24 h (jamais l'adresse en clair), identifiants hors du dossier 
   favicons (ico, svg, apple-touch), données structurées Organization / WebSite / FAQPage
   générées depuis la FAQ visible, `robots.txt` et `sitemap.xml` générés au build
   (plugin `kiess-seo` de `vite.config.ts`), page 404 en `noindex`.
-- **En-têtes** (`public/.htaccess`, repris par `npm run preview`) : CSP stricte (aucun script
-  ni style en ligne, uniquement les fichiers du site), HSTS, X-Frame-Options, nosniff,
-  Referrer-Policy, Permissions-Policy, COOP ; HTTPS forcé, `www` redirigé, fichiers
-  techniques bloqués. Pas de `style="…"` ni de `<script>` en ligne dans le code : passer
-  par `element.style.setProperty()`.
-- **Données** : aucun cookie, traceur ni service tiers (polices et médias auto-hébergés).
-  Consentement explicite et versionné (`consent_version`), pages `/confidentialite/` et
-  `/mentions-legales/`. **Les champs surlignés en jaune** dans ces deux pages (éditeur,
-  SIRET, directeur de la publication) **sont à compléter avant la mise en ligne**.
-- **Lighthouse** (build de production, GPU) : mobile 88 / 100 / 100 / 100, desktop
-  97 / 100 / 100 / 100 (performance / accessibilité / bonnes pratiques / SEO).
+- **En-têtes** (`htaccess.ts` → `dist/.htaccess`, repris par `npm run preview`) : CSP stricte
+  (aucun script ni style en ligne ; `connect-src` = le site, l’API et le stockage des photos),
+  HSTS, X-Frame-Options, nosniff, `Referrer-Policy: strict-origin`, Permissions-Policy, COOP ;
+  HTTPS forcé, `www` redirigé, fichiers techniques bloqués. Pas de `style="…"` ni de
+  `<script>` en ligne dans le code : passer par `element.style.setProperty()`.
+- **Données** : aucun cookie, traceur ni service tiers (polices et médias auto-hébergés). Pendant
+  l’inscription, les jetons de session sont gardés dans `sessionStorage` (onglet courant), puis
+  révoqués (`/auth/logout`) et effacés à la fin. La photo est recadrée et réencodée en JPEG dans
+  le navigateur (métadonnées EXIF / GPS supprimées) avant l’envoi.
 
 ## Performance
 
@@ -150,14 +113,14 @@ d'empreinte HMAC 24 h (jamais l'adresse en clair), identifiants hors du dossier 
 
 ```
 web/
-├── index.html              Accueil : contenu de toutes les sections + formulaire (dialog)
+├── index.html              Accueil : contenu de toutes les sections + inscription (dialog)
+├── cgu/                    Conditions générales (texte de l’app, généré)
+├── confidentialite/        Politique de confidentialité (texte de l’app + section site)
 ├── mentions-legales/       Mentions légales
-├── confidentialite/        Politique de confidentialité
 ├── 404.html                Page introuvable
-├── server/                 Modèle de kiess-config.php (non publié)
+├── htaccess.ts             .htaccess (Hostinger) et en-têtes de sécurité
+├── legal.ts                Pages légales générées depuis api/src/legal/legal-content.ts
 ├── public/
-│   ├── .htaccess           HTTPS, en-têtes de sécurité, cache (Hostinger)
-│   ├── api/                preinscription.php + .htaccess
 │   ├── media/              Médias optimisés (générés avec Higgsfield)
 │   └── assets/             Logos, cœurs et pièces repris de mobile/assets/figma
 ├── media-src/              Fiches des générations Higgsfield (prompts, ids) ; rushes bruts ignorés par git
@@ -165,8 +128,11 @@ web/
     ├── main.ts             Orchestration : Lenis, chargement, trajet du logo 3D au scroll, intro
     ├── three/scene.ts      Scène WebGL (chargée à part) : logo K? 3D extrudé depuis l'EPS, petits cœurs, halo
     ├── sections.ts         Film, radar, slots, ticket, chat, grille de révélation, jeux, curseur…
-    ├── beta/form.ts        Formulaire en 5 étapes (validation, navigation)
-    ├── beta/submit.ts      Envoi + contrat serveur
+    ├── signup/flow.ts      Parcours d’inscription (étapes de l’app, erreurs, photo)
+    ├── signup/api.ts       Routes de l’API Kiess (seul fichier qui parle à l’API)
+    ├── signup/oauth.ts     Apple / Google / Facebook / Discord (redirection, state, nonce)
+    ├── signup/photo.ts     Recadrage carré + JPEG
+    ├── signup/validation.ts Règles identiques à l’app
     ├── logo.ts / badges.ts Tracés du logo (K? issu de « logo eps/EPS/Group.eps ») et pictogrammes de badges
     ├── config.ts           Lecture des variables VITE_*
     ├── legal.css           Styles des pages légales et 404

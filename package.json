@@ -3,7 +3,7 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
-  "description": "Site vitrine Kiess + formulaire de préinscription",
+  "description": "Site vitrine Kiess + inscription (même compte que l’app)",
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",

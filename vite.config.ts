@@ -1,29 +1,26 @@
 import { defineConfig, loadEnv, type Plugin } from 'vite';
+import { htaccess, securityHeaders } from './htaccess';
+import { injectLegal } from './legal';
 
 /** Pages publiées (et listées dans le sitemap, sauf 404). */
 const PAGES = {
   main: 'index.html',
+  cgu: 'cgu/index.html',
   mentions: 'mentions-legales/index.html',
   confidentialite: 'confidentialite/index.html',
   notFound: '404.html',
 };
-const SITEMAP = ['/', '/mentions-legales/', '/confidentialite/'];
+const SITEMAP = ['/', '/cgu/', '/mentions-legales/', '/confidentialite/'];
 
-/**
- * En-têtes de sécurité : identiques à public/.htaccess (production Hostinger),
- * appliqués aussi à `npm run preview` pour vérifier que la CSP ne casse rien.
- */
-export const SECURITY_HEADERS: Record<string, string> = {
-  'Content-Security-Policy':
-    "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; " +
-    "font-src 'self'; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; " +
-    "form-action 'self'; frame-ancestors 'none'",
-  'X-Content-Type-Options': 'nosniff',
-  'X-Frame-Options': 'DENY',
-  'Referrer-Policy': 'strict-origin-when-cross-origin',
-  'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
-  'Cross-Origin-Opener-Policy': 'same-origin',
-};
+/** Origine (https://hôte[:port]) d'une adresse, ou rien si elle est vide ou invalide. */
+function origin(url: string | undefined): string[] {
+  if (!url?.trim()) return [];
+  try {
+    return [new URL(url.trim()).origin];
+  } catch {
+    throw new Error(`Adresse invalide dans .env : ${url}`);
+  }
+}
 
 const decode = (s: string) =>
   s
@@ -62,13 +59,13 @@ function jsonLd(html: string, site: string): string {
   return `<script type="application/ld+json">${json}</script>`;
 }
 
-function seo(site: string): Plugin {
+function seo(site: string, connect: string[]): Plugin {
   return {
     name: 'kiess-seo',
     transformIndexHtml: {
       order: 'pre',
       handler(html) {
-        const out = html.replaceAll('__SITE_URL__', site);
+        const out = injectLegal(html.replaceAll('__SITE_URL__', site));
         return out.includes('<!--seo:jsonld-->') ? out.replace('<!--seo:jsonld-->', jsonLd(out, site)) : out;
       },
     },
@@ -77,8 +74,9 @@ function seo(site: string): Plugin {
       this.emitFile({
         type: 'asset',
         fileName: 'robots.txt',
-        source: `User-agent: *\nAllow: /\nDisallow: /api/\n\nSitemap: ${site}/sitemap.xml\n`,
+        source: `User-agent: *\nAllow: /\n\nSitemap: ${site}/sitemap.xml\n`,
       });
+      this.emitFile({ type: 'asset', fileName: '.htaccess', source: htaccess(connect) });
       this.emitFile({
         type: 'asset',
         fileName: 'sitemap.xml',
@@ -95,10 +93,15 @@ export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, '.', 'VITE_');
   // Adresse publique du site (balise canonical, Open Graph, sitemap)
   const site = (env.VITE_SITE_URL || 'https://kiess.fr').replace(/\/+$/, '');
+  // Ce que la page peut appeler en plus d'elle-même : l'API Kiess et le stockage des photos
+  const connect = [...origin(env.VITE_API_URL), ...origin(env.VITE_UPLOADS_ORIGIN)];
+  if (mode === 'production' && !env.VITE_API_URL) {
+    console.warn('\n⚠  VITE_API_URL vide : l’inscription du site sera en mode démo (aucun compte créé).\n');
+  }
   return {
-    plugins: [seo(site)],
+    plugins: [seo(site, connect)],
     server: { port: 5173, host: true },
-    preview: { headers: SECURITY_HEADERS },
+    preview: { headers: securityHeaders(connect) },
     build: {
       target: 'es2020',
       assetsInlineLimit: 0,

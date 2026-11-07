@@ -10,7 +10,8 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { CONFIG } from './config';
 import type { HeartPose, KiessScene } from './three/scene';
-import { initBetaForm } from './beta/form';
+import { initSignup } from './signup/flow';
+import { consumeOAuthReturn } from './signup/oauth';
 import {
   mountLogos,
   initManifesto,
@@ -26,6 +27,10 @@ import {
   initMarquee,
   initCursor,
 } from './sections';
+
+// Retour d'une connexion Apple / Google / Facebook / Discord : lu (et retiré de
+// l'adresse) avant toute autre chose.
+const oauthReturn = consumeOAuthReturn();
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -194,15 +199,16 @@ const sectionsReady = (async () => {
   }
 })();
 
-document.querySelectorAll<HTMLElement>('[data-open-beta]').forEach((b) =>
+document.querySelectorAll<HTMLElement>('[data-open-signup]').forEach((b) =>
   b.addEventListener('pointerenter', () => scene?.excite(0.35)),
 );
 
-initBetaForm({
+const signup = initSignup({
   onOpen: () => lenis?.stop(),
   onClose: () => lenis?.start(),
   onSuccess: () => scene?.excite(1.4),
 });
+if (oauthReturn) void signup.resumeOAuth(oauthReturn);
 
 // ─── Chargement + intro ─────────────────────────────────────────────────
 const loader = document.getElementById('loader')!;

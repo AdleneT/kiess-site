@@ -1,25 +1,28 @@
-/** Réglages du site, surchargés par les variables VITE_* (voir .env.example). */
+/** Réglages du site, lus au build depuis les variables VITE_* (voir .env.example). */
 const env = import.meta.env;
 
 const read = (value: unknown) => (typeof value === 'string' ? value.trim() : '');
 
-/** Adresse de l'API Kiess (même valeur que EXPO_PUBLIC_API_URL du mobile), si elle est en ligne. */
-const apiUrl = read(env.VITE_API_URL).replace(/\/+$/, '');
-
-/**
- * Où part le formulaire de préinscription, par ordre de priorité :
- *   1. VITE_BETA_ENDPOINT (URL complète) ;
- *   2. VITE_API_URL → {API}/pre-registrations (module api/src/pre-registrations) ;
- *   3. en production : le script PHP livré avec le site (public/api/preinscription.php),
- *      qui enregistre dans la base MySQL de l'hébergement Hostinger.
- * En développement (npm run dev), sans 1 ni 2 : mode démo, rien n'est envoyé.
- */
-const betaEndpoint =
-  read(env.VITE_BETA_ENDPOINT) ||
-  (apiUrl ? `${apiUrl}/pre-registrations` : '') ||
-  (env.PROD ? '/api/preinscription.php' : '');
+export type Provider = 'apple' | 'google' | 'facebook' | 'discord';
 
 export const CONFIG = {
-  betaEndpoint,
+  /**
+   * Adresse de l'API Kiess, sans / final : la même que l'app
+   * (EXPO_PUBLIC_API_URL). L'inscription du site crée un compte de l'app.
+   * Vide : mode démo (rien n'est envoyé).
+   */
+  apiUrl: read(env.VITE_API_URL).replace(/\/+$/, ''),
   supportEmail: 'support@kiess.fr',
-} as const;
+  /**
+   * Identifiants publics des connexions sociales, côté « application web »
+   * (aucun secret ici : le secret Discord reste sur l'API).
+   * Vide : le bouton est masqué en production ; en développement, il passe
+   * par les jetons de test de l'API (dev_token_…), comme l'app en Expo Go.
+   */
+  oauth: {
+    apple: read(env.VITE_APPLE_SERVICES_ID),
+    google: read(env.VITE_GOOGLE_CLIENT_ID),
+    facebook: read(env.VITE_FACEBOOK_APP_ID),
+    discord: read(env.VITE_DISCORD_CLIENT_ID),
+  } satisfies Record<Provider, string>,
+};
