@@ -1,0 +1,30 @@
+[
+  {
+    "created_at": "2026-11-06T10:40:22.401883Z",
+    "display_name": "Kling v3.0",
+    "id": "67822649-6830-484e-89ec-6e9f42d1448c",
+    "job_type": "kling3_0",
+    "min_result_url": null,
+    "params": {
+      "aspect_ratio": "16:9",
+      "cfg_scale": 0.5,
+      "duration": 10,
+      "enhance_prompt": false,
+      "height": 1080,
+      "kling_element_ids": [],
+      "kling_elements": [],
+      "medias": [],
+      "mode": "pro",
+      "multi_prompt": [],
+      "multi_shot_mode": "custom",
+      "multi_shots": false,
+      "prompt": "Cinematic slow-motion shot: two backlit silhouettes, a young woman and a young man in their twenties, slowly walking toward each other through soft magenta and crimson haze, faces hidden in shadow, rim light outlining hair and shoulders, drifting glowing particles, deep dark background, shallow depth of field, anamorphic lens flare, slow dolly-in, romantic and mysterious mood, subtle film grain, no text, no logos",
+      "reference_elements": [],
+      "sound": "off",
+      "width": 1920
+    },
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3LchyVZzrcYxFh3zNDYBKVx3MGu/hf_20261106_104022_67822649-6830-484e-89ec-6e9f42d1448c.mp4",
+    "status": "completed",
+    "thumbnail_url": "https://cdn.higgsfield.ai/user_3LchyVZzrcYxFh3zNDYBKVx3MGu/hf_20261106_104022_67822649-6830-484e-89ec-6e9f42d1448c_thumbnail.webp"
+  }
+]

@@ -1,0 +1,30 @@
+[
+  {
+    "created_at": "2026-11-06T10:40:25.498434Z",
+    "display_name": "Kling v3.0",
+    "id": "4e70ce76-e048-4f56-8a3a-ed64a872ddee",
+    "job_type": "kling3_0",
+    "min_result_url": null,
+    "params": {
+      "aspect_ratio": "1:1",
+      "cfg_scale": 0.5,
+      "duration": 10,
+      "enhance_prompt": false,
+      "height": 1080,
+      "kling_element_ids": [],
+      "kling_elements": [],
+      "medias": [],
+      "mode": "pro",
+      "multi_prompt": [],
+      "multi_shot_mode": "custom",
+      "multi_shots": false,
+      "prompt": "Square close-up portrait of a young woman in her mid-twenties with natural wavy chestnut hair and a few freckles, looking straight into the camera, smiling then softly laughing, subtle natural head movement, warm golden-hour light on her face, soft pink and red bokeh background, cinematic shallow depth of field, natural skin texture, static camera, no text, no logos",
+      "reference_elements": [],
+      "sound": "off",
+      "width": 1080
+    },
+    "result_url": "https://d8j0ntlcm91z4.cloudfront.net/user_3LchyVZzrcYxFh3zNDYBKVx3MGu/hf_20261106_104025_4e70ce76-e048-4f56-8a3a-ed64a872ddee.mp4",
+    "status": "completed",
+    "thumbnail_url": "https://cdn.higgsfield.ai/user_3LchyVZzrcYxFh3zNDYBKVx3MGu/hf_20261106_104025_4e70ce76-e048-4f56-8a3a-ed64a872ddee_thumbnail.webp"
+  }
+]

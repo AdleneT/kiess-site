@@ -1,0 +1,32 @@
+# Kiess — configuration pour Hostinger (LiteSpeed / Apache)
+# Le HTTPS se force depuis hPanel (Sécurité > SSL > « Forcer HTTPS »).
+
+Options -Indexes
+
+<IfModule mod_mime.c>
+  AddType video/mp4 .mp4
+  AddType image/webp .webp
+  AddType font/woff2 .woff2
+  AddType image/svg+xml .svg
+</IfModule>
+
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript image/svg+xml application/json
+</IfModule>
+
+<IfModule mod_headers.c>
+  # Fichiers versionnés par Vite (nom avec empreinte) : cache long
+  <FilesMatch "\.(js|css|woff2?)$">
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </FilesMatch>
+  # Médias et images : 1 semaine
+  <FilesMatch "\.(mp4|jpg|jpeg|webp|png|svg)$">
+    Header set Cache-Control "public, max-age=604800"
+  </FilesMatch>
+  # La page elle-même : toujours revalidée, pour voir les mises à jour tout de suite
+  <FilesMatch "\.html$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>

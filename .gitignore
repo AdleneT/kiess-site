@@ -1,0 +1,8 @@
+node_modules
+dist
+.env
+.env.local
+# Rushes Higgsfield bruts (28 Mo) : les versions web optimisées sont dans public/media
+media-src/*.mp4
+media-src/*.glb
+kiess-site.zip

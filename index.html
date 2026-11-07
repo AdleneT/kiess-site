@@ -1,0 +1,570 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Kiess — Découvrez qui vous rencontrez</title>
+    <meta name="description" content="Kiess, l’app de rencontre où la photo se mérite. Découvre une voix, une phrase, des passions, puis révèle son visage case par case. 3 discussions maximum, comptes vérifiés uniquement. Préinscris-toi." />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" type="image/png" href="/assets/favicon.png" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_FR" />
+    <meta property="og:title" content="Kiess — Découvrez qui vous rencontrez" />
+    <meta property="og:description" content="L’app de rencontre où la photo se mérite. Préinscriptions ouvertes." />
+    <meta property="og:image" content="/media/hero-poster.jpg" />
+    <meta name="twitter:card" content="summary_large_image" />
+  </head>
+  <body>
+    <!-- Écran de chargement -->
+    <div class="loader" id="loader" aria-hidden="true">
+      <div class="loader-mark">
+        <div class="loader-mark-base" data-logo="mark-faint"></div>
+        <div class="loader-mark-fill" data-logo="mark-gradient"></div>
+      </div>
+      <p class="loader-pct"><span id="loaderPct">0</span>%</p>
+    </div>
+
+    <!-- Scène WebGL : logo K? 3D + petits cœurs -->
+    <canvas class="gl" id="gl" aria-hidden="true"></canvas>
+    <div class="cursor" id="cursor" aria-hidden="true"><span></span></div>
+
+    <header class="nav" id="nav">
+      <a href="#top" class="nav-logo" aria-label="Kiess, retour en haut" data-logo="wordmark-gradient"></a>
+      <nav class="nav-links" aria-label="Sections">
+        <a href="#concept">Concept</a>
+        <a href="#matchmaking">Fonctionnalités</a>
+        <a href="#securite">Sécurité</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <button class="btn btn-grad btn-sm" data-open-beta type="button">Préinscription</button>
+    </header>
+
+    <main id="main">
+      <!-- HERO -->
+      <section class="hero" id="top" data-heart="0.25,0.02,0,0" data-heart-m="0.2,0.3,0,0">
+        <div class="hero-glow" aria-hidden="true"></div>
+        <div class="hero-grid wrap">
+        <div class="hero-inner">
+          <p class="eyebrow hero-reveal"><span class="dot"></span> Préinscriptions ouvertes</p>
+          <h1 class="hero-title" aria-label="Découvrez qui vous rencontrez.">
+            <span class="line"><span class="hero-reveal">Découvrez</span></span>
+            <span class="line"><span class="hero-reveal thin">qui vous</span></span>
+            <span class="line"><span class="hero-reveal grad-text">rencontrez.</span></span>
+          </h1>
+          <p class="hero-lead hero-reveal">Sur Kiess, la photo se mérite. Tu découvres d’abord une voix, une phrase, des passions. Puis, message après message, son visage se dévoile.</p>
+          <div class="hero-ctas hero-reveal">
+            <button class="btn btn-grad" data-open-beta type="button">Je me préinscris</button>
+            <a class="btn btn-ghost" href="#concept">Comment ça marche</a>
+          </div>
+          <p class="hero-meta hero-reveal">Bientôt sur iPhone &amp; Android</p>
+        </div>
+
+        <!-- Maquette iPhone : écran de révélation de l'app (Figma « Julia Decouvre via chat »).
+             Le téléphone est dessiné à l'échelle réelle (écran 390 × 844 pt) puis réduit d'un bloc. -->
+        <div class="hero-device-stage tilt-stage" data-tilt="6" role="img" aria-label="Aperçu de l’app Kiess sur iPhone : la photo de Juliette se révèle case par case">
+          <div class="hero-device-tilt">
+            <div class="device-shadow" aria-hidden="true"></div>
+            <div class="hero-device">
+              <div class="iphone">
+                <div class="iphone-body">
+                  <span class="ib ib-action"></span><span class="ib ib-up"></span><span class="ib ib-down"></span><span class="ib ib-power"></span>
+                  <div class="iphone-frame">
+                    <div class="iphone-bezel">
+                      <div class="iphone-screen">
+                  <div class="app" aria-hidden="true">
+                    <div class="app-top"></div>
+                    <div class="app-status">
+                      <b>14:30</b>
+                      <span class="sb">
+                        <svg viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1" /><rect x="5" y="5.5" width="3" height="6.5" rx="1" /><rect x="10" y="3" width="3" height="9" rx="1" /><rect x="15" y="0" width="3" height="12" rx="1" /></svg>
+                        <svg viewBox="0 0 16 12"><path d="M8 11.5l2.3-2.6a3.2 3.2 0 0 0-4.6 0L8 11.5zM3.4 6.5a6.5 6.5 0 0 1 9.2 0l1.6-1.8a8.9 8.9 0 0 0-12.4 0l1.6 1.8zM.1 2.9a11.5 11.5 0 0 1 15.8 0" stroke="#000" stroke-width="1.8" fill="none" stroke-linecap="round" /></svg>
+                        <span class="batt"><i></i></span>
+                      </span>
+                    </div>
+                    <div class="app-head">
+                      <span class="chev"></span>
+                      <span class="app-logo" data-logo="wordmark-gradient"></span>
+                      <span class="app-more"><i></i><i></i><i></i></span>
+                    </div>
+                    <p class="app-name">Juliette</p>
+                    <p class="app-sub">Étudiante (22 ans)<br />Lyon (69)</p>
+                    <div class="app-grid" id="heroGrid"></div>
+                    <div class="app-stats">
+                      <div class="app-stat"><img src="/assets/chat-3d@2x.webp" alt="" class="ico-chat" /><b>145</b><span>Message(s)</span></div>
+                      <div class="app-stat"><img src="/assets/app/coin.svg" alt="" class="ico-coin" /><b>120</b><span>Point(s)</span></div>
+                      <div class="app-stat app-stat-super"><img src="/assets/piece-rouge@2x.webp" alt="" class="ico-piece" /><b>0</b><span>Super pièce(s)</span></div>
+                    </div>
+                    <nav class="app-tabs">
+                      <span class="tab"><img src="/assets/app/tab-home.svg" alt="" class="t-home" /><img src="/assets/app/tab-home-label.svg" alt="" class="t-home-label" /></span>
+                      <span class="tab"><img src="/assets/app/tab-profil.svg" alt="" class="t-profil" /></span>
+                      <span class="tab"><img src="/assets/app/tab-k.svg" alt="" class="t-k" /></span>
+                      <span class="tab"><img src="/assets/app/tab-boutique.svg" alt="" class="t-boutique" /></span>
+                      <span class="tab"><img src="/assets/app/tab-reglages.svg" alt="" class="t-reglages" /></span>
+                    </nav>
+                  </div>
+                        <span class="island" aria-hidden="true"></span>
+                        <span class="home-ind" aria-hidden="true"></span>
+                        <span class="glass" aria-hidden="true"></span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="sticker st-chip st-pct"><b>87%</b><span>de compatibilité</span></div>
+              <div class="sticker st-chip st-plus"><b>+1</b><span>point</span></div>
+            </div>
+          </div>
+        </div>
+        </div>
+        <a class="scroll-cue" href="#concept" aria-label="Défiler vers le concept"><span></span></a>
+      </section>
+
+      <!-- BANDEAU -->
+      <div class="marquee" aria-hidden="true">
+        <div class="marquee-track" id="marquee">
+          <span>Découvrez qui vous rencontrez</span><i data-logo="mark-gradient"></i>
+          <span>La photo se mérite</span><i data-logo="mark-gradient"></i>
+          <span>Comptes vérifiés uniquement</span><i data-logo="mark-gradient"></i>
+          <span>Découvrez qui vous rencontrez</span><i data-logo="mark-gradient"></i>
+          <span>La photo se mérite</span><i data-logo="mark-gradient"></i>
+          <span>Comptes vérifiés uniquement</span><i data-logo="mark-gradient"></i>
+        </div>
+      </div>
+
+      <!-- FILM (vidéo Higgsfield dans une tuile façon app) -->
+      <section class="film" id="film" data-heart="0,0,0,0.4" data-heart-m="0,0,0,0.4">
+        <div class="wrap">
+          <div class="film-card" id="filmCard">
+            <video id="heroVideo" muted playsinline loop preload="metadata" poster="/media/hero-poster.jpg"></video>
+            <div class="film-shade" aria-hidden="true"></div>
+            <div class="film-caption">
+              <p class="film-eyebrow">Kiess</p>
+              <p class="film-title">La photo<br />se mérite.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- MANIFESTE -->
+      <section class="manifesto" id="concept" data-heart="0,0,0.85,0.4" data-heart-m="0,0,0.6,0.4">
+        <div class="wrap manifesto-inner">
+          <p class="eyebrow">Découvrez qui vous rencontrez</p>
+          <p class="manifesto-text" id="manifestoText">Ailleurs, tu juges une photo en une demi-seconde. Ici, tu rencontres d’abord quelqu’un. Sa voix. Ses mots. Ses passions. Le visage&nbsp;? Il se mérite.</p>
+        </div>
+      </section>
+
+      <!-- 01 MATCHMAKING -->
+      <section class="feature" id="matchmaking" data-heart="0.6,0.2,0,1.2" data-heart-m="0,0.4,0,1.2">
+        <div class="wrap feature-grid">
+          <div class="feature-copy">
+            <p class="feature-num">01</p>
+            <h2 class="feature-title">Plusieurs façons de&nbsp;<span class="grad-text">matcher.</span></h2>
+            <p class="feature-text">Choisis ton matchmaking : chaque mode a sa façon de te faire rencontrer quelqu’un. L’algorithme compare vos profils (âge, ville, valeurs, préférences) et te propose des personnes compatibles. Sans visage, juste un pourcentage.</p>
+            <ul class="feature-list">
+              <li><strong>Plusieurs modes</strong> de matchmaking au choix</li>
+              <li>Un <strong>taux de compatibilité</strong> pour chaque profil</li>
+              <li><strong>Aucune photo</strong> avant d’avoir échangé</li>
+            </ul>
+          </div>
+          <div class="feature-visual">
+            <div class="tilt-stage" data-tilt="14">
+              <div class="radar" id="radar">
+                <div class="radar-rings"><i></i><i></i><i></i><i></i></div>
+                <div class="radar-sweep"></div>
+                <div class="radar-cards" id="radarCards"></div>
+                <div class="radar-center">
+                  <div class="radar-mark" data-logo="mark-white"></div>
+                  <span class="radar-rule"></span>
+                  <p class="radar-label">Découvrez qui vous rencontrez</p>
+                  <p class="radar-tap">Tap’ pour voir les profils</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 02 SLOTS -->
+      <section class="feature feature-soft" id="slots" data-heart="0.6,0,0,1.2" data-heart-m="0,0,0,1.2">
+        <div class="wrap feature-grid feature-grid-rev">
+          <div class="feature-visual">
+            <div class="slots-board" id="slotsBoard">
+              <p class="slots-head">Tes discussions <b><span id="slotsCount">1</span>/3</b></p>
+              <div class="slots-row">
+                <div class="slot slot-full" data-tilt="10">
+                  <div class="slot-ring"><span class="slot-photo"></span></div>
+                  <p class="slot-name">Juliette</p>
+                </div>
+                <div class="slot" data-tilt="10" data-fill="Inès">
+                  <div class="slot-ring"><span class="slot-mark" data-logo="mark-white"></span><span class="slot-photo slot-photo-2"></span></div>
+                  <p class="slot-name">Vide</p>
+                </div>
+                <div class="slot" data-tilt="10" data-fill="Théo">
+                  <div class="slot-ring"><span class="slot-mark" data-logo="mark-white"></span><span class="slot-photo slot-photo-3"></span></div>
+                  <p class="slot-name">Vide</p>
+                </div>
+                <div class="slot slot-locked" aria-label="Pas de quatrième discussion">
+                  <div class="slot-ring"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" /><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" /></svg></div>
+                  <p class="slot-name">Pas de 4<sup>e</sup></p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="feature-copy">
+            <p class="feature-num">02</p>
+            <h2 class="feature-title">3 discussions, pas une de&nbsp;<span class="grad-text">plus.</span></h2>
+            <p class="feature-text">Sur Kiess, tu as 3 slots de discussion au maximum. Pour prendre le temps de connaître chaque personne, favoriser la qualité et éviter le fast matching.</p>
+            <ul class="feature-list">
+              <li><strong>3 slots</strong> de discussion en même temps, maximum</li>
+              <li>Un slot se libère : tu peux <strong>relancer un matchmaking</strong></li>
+              <li><strong>Pas d’horaire</strong>, pas de compte à rebours</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <!-- 03 TICKET -->
+      <section class="feature" id="ticket" data-heart="0.6,0,0,1.2" data-heart-m="0,0,0,1.2">
+        <div class="wrap feature-grid">
+          <div class="feature-copy">
+            <p class="feature-num">03</p>
+            <h2 class="feature-title">Une personnalité avant un&nbsp;<span class="grad-text">visage.</span></h2>
+            <p class="feature-text">Avant de matcher, tu découvres son ticket. Pas de photo : sa compatibilité avec toi, sa phrase d’accroche, dix secondes de sa voix et ses passions. Tu matches, ou pas.</p>
+            <ul class="feature-list feature-list-icons">
+              <li><span class="fi">%</span> Taux de compatibilité calculé pour vous deux</li>
+              <li><span class="fi">“</span> Une phrase d’accroche pour se présenter</li>
+              <li><span class="fi">◖◗</span> Un audio match de 10 secondes</li>
+              <li><span class="fi">✦</span> Jusqu’à 30 badges d’intérêt</li>
+            </ul>
+          </div>
+          <div class="feature-visual">
+            <div class="tilt-stage ticket-stage" data-tilt="12">
+              <article class="ticket" id="ticketCard" aria-label="Exemple de ticket de profil">
+                <div class="ticket-glare" aria-hidden="true"></div>
+                <header class="ticket-head">
+                  <div>
+                    <h3 class="ticket-name">Juliette</h3>
+                    <p class="ticket-meta">22 ans | Lyon</p>
+                  </div>
+                  <div class="ticket-score">
+                    <p class="ticket-pct"><span data-count="87">0</span>%</p>
+                    <p class="ticket-pct-label">de taux de compatibilité</p>
+                  </div>
+                </header>
+                <hr />
+                <p class="ticket-label">Sa phrase d’accroche</p>
+                <p class="ticket-phrase">Ici pour rencontrer une personne cool, ouverte et qui n’a pas peur de se lancer.</p>
+                <p class="ticket-label">Son audio match</p>
+                <button class="ticket-audio" id="ticketAudio" type="button" aria-pressed="false" aria-label="Lire l’audio match (démo)">
+                  <span class="play" aria-hidden="true"></span>
+                  <span class="wave" id="ticketWave" aria-hidden="true"></span>
+                </button>
+                <p class="ticket-label">Ses badges <span class="muted">(30)</span></p>
+                <div class="ticket-badges" id="ticketBadges"></div>
+                <div class="ticket-actions">
+                  <button class="tbtn tbtn-no" type="button" id="ticketNo">Non merci</button>
+                  <button class="tbtn tbtn-yes" type="button" id="ticketYes">Je match</button>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 04 CHAT -->
+      <section class="chat-sec feature-soft" id="chat" data-heart="0.6,0,0,1.2" data-heart-m="0,0,0,1.2">
+        <div class="wrap feature-grid sticky-grid">
+          <div class="feature-copy sticky-copy">
+            <p class="feature-num">04</p>
+            <h2 class="feature-title">Échangez pour de vrai, gagnez des&nbsp;<span class="grad-text">points.</span></h2>
+            <p class="feature-text">Les points récompensent les vrais échanges : il faut que vous parliez tous les deux. Ces points te permettent ensuite de révéler sa photo, case par case.</p>
+            <div class="points-legend">
+              <div><span class="pl-num">+1</span><span>1 message envoyé<br />+ 1 message reçu</span></div>
+              <div><span class="pl-num">+2</span><span>1 vocal envoyé<br />+ 1 vocal reçu</span></div>
+            </div>
+          </div>
+          <div class="feature-visual sticky-visual">
+            <div class="phone sticky-item" id="phone">
+              <div class="phone-notch"></div>
+              <header class="phone-head">
+                <span class="chev" aria-hidden="true"></span>
+                <span class="phone-avatar" aria-hidden="true"></span>
+                <span class="phone-name">Juliette</span>
+                <span class="pts-chip" id="ptsChip"><b id="ptsVal">12</b> pts</span>
+              </header>
+              <div class="phone-body" id="chatBody">
+                <div class="msg me">Salut ! Ton audio match m’a fait rire 😄</div>
+                <div class="msg her" data-pts="1">Haha merci ! J’avoue, j’ai fait 12 essais 🙈</div>
+                <div class="msg me">12 ?! Respect. On a le même badge jardinage 🌱</div>
+                <div class="msg her" data-pts="1">Trop bien, tu fais pousser quoi ?</div>
+                <div class="msg me audio"><span class="mini-play"></span><span class="mini-wave"></span><span class="dur">0:12</span></div>
+                <div class="msg her audio" data-pts="2"><span class="mini-play"></span><span class="mini-wave"></span><span class="dur">0:09</span></div>
+                <div class="unlock" id="chatUnlock"><img src="/assets/piece-rouge@2x.webp" alt="" width="22" height="22" /> Une nouvelle case à révéler !</div>
+              </div>
+              <footer class="phone-input"><span class="plus">+</span><span class="field">Écrire un message</span></footer>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 05 RÉVÉLATION -->
+      <section class="reveal-sec" id="revelation" data-heart="0.6,0,0,1.2" data-heart-m="0,0,0,1.2">
+        <div class="wrap feature-grid sticky-grid reveal-layout">
+          <div class="feature-copy sticky-copy reveal-copy">
+            <p class="feature-num">05</p>
+            <h2 class="feature-title">Révèle son visage, case par&nbsp;<span class="grad-text">case.</span></h2>
+            <ol class="reveal-steps" id="revealSteps">
+              <li class="is-active"><span>Vos points</span> débloquent des cases</li>
+              <li><span>16 cases</span> pour découvrir la photo entière</li>
+              <li><span>À votre rythme</span> : vous avancez ensemble</li>
+            </ol>
+            <p class="reveal-note">Les cases encore cachées ne quittent jamais nos serveurs. Impossible de tricher pour voir une photo.</p>
+          </div>
+          <div class="feature-visual sticky-visual reveal-visual">
+            <div class="sticky-item reveal-stack">
+              <div class="reveal-board" id="revealBoard">
+                <video id="revealVideo" muted playsinline preload="auto" poster="/media/reveal-poster.jpg"></video>
+                <div class="reveal-tiles" id="revealTiles"></div>
+                <div class="reveal-id" id="revealId">
+                  <p class="rid-name">Juliette</p>
+                  <p class="rid-meta">22 ans · Lyon (69) · <b>87&nbsp;%</b></p>
+                </div>
+              </div>
+              <div class="reveal-stats">
+                <div class="rs"><img src="/assets/chat-3d@2x.webp" alt="" width="34" height="28" /><b id="rsMsgs">0</b><span>message(s)</span></div>
+                <div class="rs"><span class="rs-mic" aria-hidden="true"></span><b id="rsVocals">0</b><span>vocal(aux)</span></div>
+                <div class="rs"><span class="rs-grid" aria-hidden="true"></span><b id="rsTiles">0</b><span>/ 16 cases</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 06 JEUX -->
+      <section class="games feature-soft" id="jeux" data-heart="0.6,0,0,1.2" data-heart-m="0,0,0,1.2">
+        <div class="wrap feature-grid">
+          <div class="feature-copy">
+            <p class="feature-num">06 <span class="soon">Bientôt</span></p>
+            <h2 class="feature-title">Brise la glace en&nbsp;<span class="grad-text">jouant.</span></h2>
+            <p class="feature-text">Des parties en duo et en direct pour apprendre à se connaître autrement. KIESS x UNO, Ludo… et d’autres jeux à venir. Parce qu’un fou rire en dit souvent plus long qu’une bio.</p>
+          </div>
+          <div class="feature-visual">
+            <div class="cards-fan" id="cardsFan">
+              <div class="gcard gcard-red"><span class="gc-corner">K?</span><div class="gc-mark" data-logo="mark-white"></div><p>KIESS x UNO</p></div>
+              <div class="gcard gcard-gold"><span class="gc-corner">K?</span><div class="gc-dice" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><p>Ludo</p></div>
+              <div class="gcard gcard-white"><span class="gc-corner">K?</span><div class="gc-q">?</div><p>À venir</p></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SÉCURITÉ -->
+      <section class="safety" id="securite" data-heart="0.6,0,0,1.2" data-heart-m="0,0,0,1.2">
+        <div class="wrap">
+          <p class="eyebrow center">Sécurité</p>
+          <h2 class="section-title center">Un espace <span class="grad-text">sûr.</span></h2>
+          <div class="safety-grid">
+            <article class="scard" data-tilt="8">
+              <div class="scard-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.3-7 10-4-1.7-7-5.5-7-10V6l7-3z" /><path d="M9 12l2 2 4-4" /></svg></div>
+              <h3>Comptes vérifiés uniquement</h3>
+              <p>Chaque compte est vérifié dès l’inscription, par SMS et par e-mail. Pas de bots, pas de profils fantômes.</p>
+            </article>
+            <article class="scard" data-tilt="8">
+              <div class="scard-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2" /><circle cx="12" cy="10" r="3" /><path d="M7.5 17c.9-2 2.6-3 4.5-3s3.6 1 4.5 3" /></svg></div>
+              <h3>Contenus modérés</h3>
+              <p>Chaque photo est analysée à l’envoi : un vrai visage est obligatoire, les contenus explicites sont refusés. Bios et phrases d’accroche sont filtrées.</p>
+            </article>
+            <article class="scard" data-tilt="8">
+              <div class="scard-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M6 6l12 12" /></svg></div>
+              <h3>Signaler, bloquer</h3>
+              <p>En un geste, depuis le chat ou ton slot. Le blocage est immédiat et réciproque : vous ne pouvez plus vous voir ni vous écrire.</p>
+            </article>
+            <article class="scard" data-tilt="8">
+              <div class="scard-ico"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="10.5" width="14" height="10" rx="2" /><path d="M8 10.5V8a4 4 0 0 1 8 0v2.5" /><circle cx="12" cy="15.5" r="1.3" /></svg></div>
+              <h3>Ta photo protégée</h3>
+              <p>Les cases non révélées ne quittent jamais nos serveurs. Personne ne peut voir ta photo avant de l’avoir méritée.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- PRÉINSCRIPTION -->
+      <section class="join" id="preinscription" data-heart="0.3,0.02,0.55,0" data-heart-m="0,0.27,0.3,0">
+        <div class="wrap">
+          <div class="join-card">
+            <p class="eyebrow eyebrow-light">Préinscription</p>
+            <h2 class="join-title">Sois parmi les premiers utilisateurs.</h2>
+            <p class="join-text">Kiess arrive bientôt sur iPhone et Android. Préinscris-toi en une minute : on te prévient par mail dès que ton accès est prêt.</p>
+            <button class="btn btn-white btn-xl" data-open-beta type="button"><span class="grad-text">Je me préinscris</span></button>
+            <p class="join-small">1 minute · sans engagement</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- FAQ -->
+      <section class="faq-sec" id="faq" data-heart="0.6,0.1,0,1.2" data-heart-m="0,0.4,0,1.2">
+        <div class="wrap faq">
+          <h2 class="faq-title">Questions fréquentes</h2>
+          <details>
+            <summary>Comment fonctionne le matching&nbsp;?</summary>
+            <p>Tu choisis un mode de matchmaking. Kiess te propose des profils compatibles, chacun avec un taux de compatibilité calculé à partir de vos deux profils. Tu découvres leur ticket (phrase d’accroche, audio match, badges), puis tu matches, ou pas.</p>
+          </details>
+          <details>
+            <summary>Pourquoi seulement 3 discussions en même temps&nbsp;?</summary>
+            <p>Pour favoriser la qualité. Avec 3 slots maximum, tu prends le temps de connaître chaque personne au lieu d’enchaîner les matchs. Quand un slot se libère, tu peux relancer un matchmaking.</p>
+          </details>
+          <details>
+            <summary>Comment je gagne des points&nbsp;?</summary>
+            <p>En échangeant pour de vrai : 1 point pour 1 message envoyé et 1 message reçu, 2 points pour 1 vocal envoyé et 1 vocal reçu.</p>
+          </details>
+          <details>
+            <summary>Quand est-ce que je vois sa photo&nbsp;?</summary>
+            <p>Au fil de vos échanges : vos points permettent de révéler sa photo case par case, jusqu’à la photo entière (16 cases). Et les cases encore cachées restent sur nos serveurs.</p>
+          </details>
+          <details>
+            <summary>Comment Kiess évite les faux comptes&nbsp;?</summary>
+            <p>Chaque compte est vérifié dès l’inscription, par SMS et par e-mail, et chaque photo est analysée : un vrai visage est obligatoire.</p>
+          </details>
+          <details>
+            <summary>Kiess est-il gratuit&nbsp;?</summary>
+            <p>Oui, l’app est gratuite. Des options Premium seront proposées pour aller plus loin.</p>
+          </details>
+          <details>
+            <summary>Sur quels téléphones&nbsp;?</summary>
+            <p>iPhone et Android.</p>
+          </details>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <div class="wrap footer-inner">
+        <div class="footer-brand">
+          <span class="footer-logo" data-logo="wordmark-gradient"></span>
+          <p class="tagline"><b>Découvrez</b> qui vous <b>rencontrez</b></p>
+        </div>
+        <nav class="footer-links" aria-label="Liens légaux">
+          <a data-cgu-link href="#" target="_blank" rel="noopener">Conditions générales</a>
+          <a data-privacy-link href="#" target="_blank" rel="noopener">Confidentialité</a>
+          <a data-support-link href="#">Contact</a>
+        </nav>
+        <p class="footer-copy">© <span id="year">2026</span> Kiess</p>
+      </div>
+    </footer>
+
+    <!-- FORMULAIRE DE PRÉINSCRIPTION -->
+    <dialog class="beta-dialog" id="betaDialog" aria-labelledby="betaDialogTitle">
+      <div class="bd-card">
+        <div class="bd-top">
+          <button type="button" class="bd-back" id="bdBack" aria-label="Étape précédente"><span class="chev"></span></button>
+          <div class="bd-progress" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+          <button type="button" class="bd-close" id="bdClose" aria-label="Fermer">×</button>
+        </div>
+        <p class="sr-only" id="betaDialogTitle">Préinscription à Kiess</p>
+        <p class="sr-only" aria-live="polite" id="bdLive"></p>
+
+        <form id="betaForm" novalidate>
+          <!-- pot de miel -->
+          <div class="hp" aria-hidden="true">
+            <label>Ne pas remplir <input type="text" name="website" tabindex="-1" autocomplete="off" /></label>
+          </div>
+
+          <!-- 1. E-mail -->
+          <fieldset class="bd-step is-active" data-step="0">
+            <legend class="bd-title"><span>Ton</span> adresse mail</legend>
+            <label class="field">
+              <span class="sr-only">Adresse e-mail</span>
+              <input type="email" name="email" placeholder="toi@exemple.fr" autocomplete="email" inputmode="email" required />
+            </label>
+            <p class="bd-hint">C’est là qu’on te préviendra quand ton accès sera prêt.</p>
+            <label class="check">
+              <input type="checkbox" name="marketingOptIn" />
+              <span class="box" aria-hidden="true"></span>
+              <span>J’accepte de recevoir des communications de Kiess</span>
+            </label>
+            <p class="bd-error" data-error></p>
+          </fieldset>
+
+          <!-- 2. Mot de passe -->
+          <fieldset class="bd-step" data-step="1">
+            <legend class="bd-title"><span>Ton</span> mot de passe</legend>
+            <label class="field field-pw">
+              <span class="sr-only">Mot de passe</span>
+              <input type="password" name="password" placeholder="Mot de passe" autocomplete="new-password" required />
+              <button type="button" class="pw-toggle" data-pw-toggle aria-label="Afficher le mot de passe">Voir</button>
+            </label>
+            <label class="field">
+              <span class="sr-only">Confirmation du mot de passe</span>
+              <input type="password" name="passwordConfirm" placeholder="Confirmation" autocomplete="new-password" required />
+            </label>
+            <ul class="pw-rules" id="pwRules">
+              <li data-rule="len">8 caractères minimum</li>
+              <li data-rule="upper">Une majuscule</li>
+              <li data-rule="digit">Un chiffre</li>
+            </ul>
+            <p class="bd-error" data-error></p>
+          </fieldset>
+
+          <!-- 3. Genre -->
+          <fieldset class="bd-step" data-step="2">
+            <legend class="bd-title">Tu es...</legend>
+            <div class="choices" role="radiogroup" aria-label="Ton genre">
+              <label class="choice"><input type="radio" name="gender" value="un homme" /><span>un homme</span></label>
+              <label class="choice"><input type="radio" name="gender" value="une femme" /><span>une femme</span></label>
+              <label class="choice"><input type="radio" name="gender" value="non binaire" /><span>non binaire</span></label>
+              <label class="choice"><input type="radio" name="gender" value="autres" /><span>autres</span></label>
+            </div>
+            <p class="bd-hint">Tu pourras le modifier plus tard.</p>
+            <p class="bd-error" data-error></p>
+          </fieldset>
+
+          <!-- 4. Recherche -->
+          <fieldset class="bd-step" data-step="3">
+            <legend class="bd-title">Tu cherches...</legend>
+            <div class="choices" aria-label="Qui tu cherches">
+              <label class="choice"><input type="checkbox" name="preferences" value="homme" /><span>des hommes</span></label>
+              <label class="choice"><input type="checkbox" name="preferences" value="femme" /><span>des femmes</span></label>
+              <label class="choice"><input type="checkbox" name="preferences" value="nb" /><span>des personnes non binaires</span></label>
+              <label class="choice"><input type="checkbox" name="preferencesAll" value="all" /><span>tout le monde</span></label>
+            </div>
+            <p class="bd-hint">Plusieurs choix possibles.</p>
+            <p class="bd-error" data-error></p>
+          </fieldset>
+
+          <!-- 5. Date de naissance + CGU -->
+          <fieldset class="bd-step" data-step="4">
+            <legend class="bd-title"><span>Ta date</span> de naissance</legend>
+            <label class="field">
+              <span class="sr-only">Date de naissance, jour mois année</span>
+              <input type="text" name="birthDate" placeholder="JJ/MM/AAAA" inputmode="numeric" autocomplete="bday" maxlength="10" required />
+            </label>
+            <p class="bd-hint">Tu dois être majeur·e pour utiliser Kiess.</p>
+            <label class="check">
+              <input type="checkbox" name="acceptedTerms" required />
+              <span class="box" aria-hidden="true"></span>
+              <span>J’ai lu et j’accepte les <a data-cgu-link href="#" target="_blank" rel="noopener">conditions générales</a> et la <a data-privacy-link href="#" target="_blank" rel="noopener">politique de confidentialité</a></span>
+            </label>
+            <p class="bd-error" data-error></p>
+          </fieldset>
+
+          <!-- Succès -->
+          <div class="bd-step bd-success" data-step="5" tabindex="-1">
+            <div class="bd-hearts" id="bdHearts" aria-hidden="true"></div>
+            <p class="bd-success-eyebrow">Préinscription</p>
+            <p class="bd-success-title">Envoyée</p>
+            <div class="bd-success-mark" data-logo="mark-white"></div>
+            <p class="bd-success-text">Merci&nbsp;! On te prévient par mail dès que ton accès à Kiess est prêt.</p>
+            <p class="bd-demo" id="bdDemo" hidden>Mode démo : aucun backend branché, rien n’a été envoyé.</p>
+            <button type="button" class="btn btn-white" id="bdDone"><span class="grad-text">Super</span></button>
+          </div>
+
+          <div class="bd-actions" id="bdActions">
+            <button type="submit" class="btn btn-white btn-continue" id="bdNext"><span class="grad-text" id="bdNextLabel">Continuer</span></button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
