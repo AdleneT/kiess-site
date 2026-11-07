@@ -1,13 +1,14 @@
 /**
  * CGU et politique de confidentialité du site = celles de l'app, générées au
- * build depuis api/src/legal/legal-content.ts (source unique, aussi servie par
+ * build depuis legal-content.ts (copie de api/src/legal/legal-content.ts du
+ * dépôt de l’app kiess-app/Kiess, aussi servie par
  * l'API et affichée dans l'app). Une inscription sur le site crée un compte de
  * l'app : les règles sont les mêmes.
  *
  * Les marqueurs <!--legal:cgu-->, <!--legal:privacy--> et <!--legal:updated-->
  * des pages cgu/ et confidentialite/ sont remplacés par le texte mis en forme.
  */
-import { CGU_TEXT, LEGAL_LAST_UPDATE, PRIVACY_TEXT } from '../api/src/legal/legal-content';
+import { CGU_TEXT, LEGAL_LAST_UPDATE, PRIVACY_TEXT } from './legal-content';
 
 const SUPPORT = '<a href="mailto:support@kiess.fr">support@kiess.fr</a>';
 

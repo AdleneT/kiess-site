@@ -3,7 +3,11 @@
 Site statique (Vite + TypeScript + Three.js + GSAP + Lenis) en français : page d’accueil,
 conditions générales, politique de confidentialité, mentions légales, page 404.
 
-**L’inscription du site est celle de l’app.** Même parcours (`mobile/screens/onboarding`),
+> Dépôt du site seul. L’app (API NestJS `api/` + mobile Expo `mobile/`) est dans
+> [kiess-app/Kiess](https://github.com/kiess-app/Kiess) : les chemins `api/…` et `mobile/…` cités ici et dans le code
+> renvoient à ce dépôt. Historique repris du dossier `web/` de Kiess.
+
+**L’inscription du site est celle de l’app.** Même parcours ([`mobile/screens/onboarding`](https://github.com/kiess-app/Kiess/tree/main/mobile/screens/onboarding)),
 mêmes règles, mêmes routes de l’API Kiess : un compte créé sur le site est un compte de l’app,
 dans lequel on se connecte ensuite directement (Apple, Google, Facebook, Discord, ou e-mail /
 pseudo + mot de passe).
@@ -19,7 +23,7 @@ e-mail → prénom → nom → pseudo → genre → date de naissance → ville 
 ## Lancer
 
 ```bash
-cd web
+cd kiess-site
 npm install
 npm run dev        # http://localhost:5173 (sans VITE_API_URL : mode démo, aucun compte créé)
 npm run build      # typecheck + build → dist/
@@ -78,8 +82,10 @@ dans l’app ouvre le même compte, même si l’adresse saisie à l’inscripti
 ## Pages légales
 
 `/cgu/` et `/confidentialite/` affichent **les textes de l’app**, générés au build depuis
-[`api/src/legal/legal-content.ts`](../api/src/legal/legal-content.ts) (`legal.ts`) : modifier ce
-fichier (et sa copie `mobile/legal/index.ts`), jamais les pages. La politique ajoute une section
+[`legal-content.ts`](legal-content.ts) (`legal.ts`), **copie à l’identique** de
+[`api/src/legal/legal-content.ts`](https://github.com/kiess-app/Kiess/blob/main/api/src/legal/legal-content.ts) du dépôt de l’app :
+modifier d’abord le texte dans Kiess (et sa copie `mobile/legal/index.ts`), puis le recopier ici ;
+jamais les pages. La politique ajoute une section
 propre au site (connexion sociale, session temporaire, aucun cookie). **Les champs surlignés en
 jaune** (éditeur, adresse, SIRET, directeur de la publication, hébergeur de l’API, tribunal)
 **sont à compléter avant la mise en ligne.**
@@ -112,14 +118,15 @@ jaune** (éditeur, adresse, SIRET, directeur de la publication, hébergeur de l�
 ## Structure
 
 ```
-web/
+kiess-site/
 ├── index.html              Accueil : contenu de toutes les sections + inscription (dialog)
 ├── cgu/                    Conditions générales (texte de l’app, généré)
 ├── confidentialite/        Politique de confidentialité (texte de l’app + section site)
 ├── mentions-legales/       Mentions légales
 ├── 404.html                Page introuvable
 ├── htaccess.ts             .htaccess (Hostinger) et en-têtes de sécurité
-├── legal.ts                Pages légales générées depuis api/src/legal/legal-content.ts
+├── legal.ts                Pages légales (CGU, confidentialité) générées au build
+├── legal-content.ts        Textes légaux de l’app (copie de Kiess api/src/legal)
 ├── public/
 │   ├── media/              Médias optimisés (générés avec Higgsfield)
 │   └── assets/             Logos, cœurs et pièces repris de mobile/assets/figma
