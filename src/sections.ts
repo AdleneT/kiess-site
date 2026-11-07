@@ -61,8 +61,12 @@ export function initHeroMockup(reduced: boolean) {
 export function initManifesto() {
   const p = document.getElementById('manifestoText')!;
   const words = p.textContent!.trim().split(/\s+/);
-  p.setAttribute('aria-label', p.textContent!.trim());
-  p.innerHTML = words.map((w) => `<span class="w" aria-hidden="true">${w}</span>`).join(' ');
+  // Texte complet pour les lecteurs d'écran, mots animés masqués pour eux
+  // (aria-label n'est pas permis sur un paragraphe)
+  const full = p.textContent!.trim();
+  p.innerHTML =
+    `<span class="sr-only">${full}</span>` +
+    words.map((w) => `<span class="w" aria-hidden="true">${w}</span>`).join(' ');
   gsap.fromTo(
     p.querySelectorAll('.w'),
     { opacity: 0.16 },
@@ -152,9 +156,15 @@ export function initRadar() {
   host.innerHTML = cards
     .map(
       (c) =>
-        `<div class="rcard" style="left:${c.x}%;top:${c.y}%;--z:${c.z}px"><div class="rcard-in">${SILHOUETTE}<b><span data-count="${c.pct}">0</span>%</b></div></div>`,
+        `<div class="rcard"><div class="rcard-in">${SILHOUETTE}<b><span data-count="${c.pct}">0</span>%</b></div></div>`,
     )
     .join('');
+  // Positions via le CSSOM (pas d'attribut style : compatible avec la CSP du site)
+  host.querySelectorAll<HTMLElement>('.rcard').forEach((el, i) => {
+    el.style.left = `${cards[i].x}%`;
+    el.style.top = `${cards[i].y}%`;
+    el.style.setProperty('--z', `${cards[i].z}px`);
+  });
   const els = host.querySelectorAll<HTMLElement>('.rcard-in');
   const tl = gsap.timeline({
     scrollTrigger: { trigger: '#radar', start: 'top 75%', toggleActions: 'play none none reverse' },
@@ -216,11 +226,16 @@ export function initTicket(onMatch: () => void) {
   let seed = 7;
   const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
   const bars = 46;
-  wave.innerHTML = Array.from({ length: bars }, (_, i) => {
+  const waveBars = Array.from({ length: bars }, (_, i) => {
     const env = Math.sin((i / bars) * Math.PI) * 0.7 + 0.3;
     const h = Math.max(0.12, env * (0.35 + rnd() * 0.65));
-    return `<i style="--h:${h.toFixed(2)};--d:${(rnd() * 0.8).toFixed(2)}s"></i>`;
-  }).join('');
+    return { h: h.toFixed(2), d: `${(rnd() * 0.8).toFixed(2)}s` };
+  });
+  wave.innerHTML = '<i></i>'.repeat(bars);
+  wave.querySelectorAll<HTMLElement>('i').forEach((el, i) => {
+    el.style.setProperty('--h', waveBars[i].h);
+    el.style.setProperty('--d', waveBars[i].d);
+  });
 
   const badgeIds = ['cinema', 'jardinage', 'graffiti', 'vegetarien', 'jeux-papier', 'casino'];
   const grads = [
@@ -232,9 +247,14 @@ export function initTicket(onMatch: () => void) {
     ['#662483', '#82368C'],
   ];
   const labels: Record<string, string> = { cinema: 'Cinéma', jardinage: 'Jardinage', graffiti: 'Street art', vegetarien: 'Végétarien', 'jeux-papier': 'Jeux de société', casino: 'Casino' };
-  document.getElementById('ticketBadges')!.innerHTML = badgeIds
-    .map((id, i) => `<span class="badge" title="${labels[id]}" style="--a:${grads[i][1]};--b:${grads[i][0]}">${BADGES[id] ?? ''}<span class="sr-only">${labels[id]}</span></span>`)
+  const badgesHost = document.getElementById('ticketBadges')!;
+  badgesHost.innerHTML = badgeIds
+    .map((id) => `<span class="badge" title="${labels[id]}">${BADGES[id] ?? ''}<span class="sr-only">${labels[id]}</span></span>`)
     .join('');
+  badgesHost.querySelectorAll<HTMLElement>('.badge').forEach((el, i) => {
+    el.style.setProperty('--a', grads[i][1]);
+    el.style.setProperty('--b', grads[i][0]);
+  });
 
   const audio = document.getElementById('ticketAudio') as HTMLButtonElement;
   audio.addEventListener('click', () => {
@@ -478,10 +498,16 @@ export function initMarquee(getVelocity: () => number) {
   const track = document.getElementById('marquee')!;
   let x = 0;
   let skew = 0;
+  // Largeur mesurée seulement quand elle change (pas à chaque image), et
+  // animation suspendue quand le bandeau est hors de l'écran.
+  let half = track.scrollWidth / 2;
+  new ResizeObserver(() => (half = track.scrollWidth / 2)).observe(track);
+  let visible = true;
+  new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(track);
   gsap.ticker.add((_t, dt) => {
+    if (!visible) return;
     const v = getVelocity();
     x -= (0.04 + Math.min(Math.abs(v) * 0.0006, 0.5)) * dt;
-    const half = track.scrollWidth / 2;
     if (half > 0 && -x > half) x += half;
     skew += (Math.max(-8, Math.min(8, v * 0.02)) - skew) * 0.1;
     track.style.transform = `translate3d(${x}px,0,0) skewX(${-skew}deg)`;

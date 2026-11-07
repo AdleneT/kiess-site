@@ -1,15 +1,17 @@
 /**
  * Envoi de la préinscription — SEUL point de contact avec le backend.
  *
- * ─── Contrat avec l'API ───────────────────────────────────────────────────
- * POST {VITE_API_URL}/pre-registrations  (api/src/pre-registrations)
- * Content-Type: application/json
- * Corps : `BetaPreregistration` (ci-dessous). L'API refuse toute clé absente
- * de CreatePreRegistrationDto : garder les deux alignés.
+ * ─── Contrat avec le serveur ──────────────────────────────────────────────
+ * POST {CONFIG.betaEndpoint} (voir config.ts), en JSON, vers :
+ *   - par défaut : /api/preinscription.php (public/api, base MySQL Hostinger) ;
+ *   - si VITE_API_URL : {API}/pre-registrations (api/src/pre-registrations).
+ * Corps : `BetaPreregistration` (ci-dessous). Les deux serveurs refusent toute
+ * clé inconnue : garder ce type, le script PHP et CreatePreRegistrationDto alignés.
  *
  * Réponses :
- *   201 / 200  → succès, écran « Demande envoyée »
- *   409        → e-mail déjà inscrit
+ *   201 / 200  → succès, écran « Demande envoyée » (le PHP répond aussi 201
+ *                pour une adresse déjà inscrite : il ne révèle pas qui est inscrit)
+ *   409        → e-mail déjà inscrit (API Nest)
  *   422 / 400  → données refusées ; le `message` du corps est affiché tel quel
  *                (l'API renvoie les mêmes textes que la validation du site)
  *   429        → trop de tentatives (5 envois par minute et par IP)

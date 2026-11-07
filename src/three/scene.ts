@@ -53,8 +53,10 @@ function logoGeometry(): THREE.BufferGeometry {
     bevelEnabled: true,
     bevelThickness: 0.9,
     bevelSize: 0.42,
-    bevelSegments: 10,
-    curveSegments: 28,
+    // Le tracé main levée compte déjà beaucoup de petites courbes : 12 segments
+    // par courbe et 6 pour le biseau suffisent (≈ 4× moins de sommets à calculer)
+    bevelSegments: 6,
+    curveSegments: 12,
   });
   // SVG = y vers le bas : une rotation de π autour de X remet le logo à l'endroit sans miroir
   g.rotateX(Math.PI);
@@ -124,14 +126,16 @@ function heartbeat(t: number): number {
 const damp = (a: number, b: number, lambda: number, dt: number) => THREE.MathUtils.lerp(a, b, 1 - Math.exp(-lambda * dt));
 
 export class KiessScene {
-  readonly ready: Promise<void>;
+  private mobile: boolean;
+  private building: Promise<void> | null = null;
   private renderer: THREE.WebGLRenderer;
   private scene = new THREE.Scene();
   private camera: THREE.PerspectiveCamera;
   private pivot = new THREE.Group();
-  private logo: THREE.Mesh;
-  private glow: THREE.Sprite;
-  private field: THREE.InstancedMesh;
+  // Construits par étapes dans build() ; frame() ne tourne qu'après.
+  private logo!: THREE.Mesh;
+  private glow!: THREE.Sprite;
+  private field!: THREE.InstancedMesh;
   private fieldData: { x: number; y: number; z: number; s: number; rx: number; ry: number; vr: number; ph: number }[] = [];
   private dummy = new THREE.Object3D();
   private timer = new THREE.Timer();
@@ -147,6 +151,8 @@ export class KiessScene {
   private fieldSpin = 0;
   private visH = 1;
   private visW = 1;
+  /** Hauteur de fenêtre mémorisée au redimensionnement (pas de lecture à chaque image) */
+  private viewH = window.innerHeight;
   private running = true;
   private reduced: boolean;
 
@@ -154,6 +160,8 @@ export class KiessScene {
     this.reduced = opts.reducedMotion;
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, opts.mobile ? 1.75 : 2));
+    // En production, pas de lecture synchrone des journaux de compilation (bloquante)
+    this.renderer.debug.checkShaderErrors = import.meta.env.DEV;
     // Neutral (Khronos PBR) conserve les couleurs de marque sans les délaver
     this.renderer.toneMapping = THREE.NeutralToneMapping;
     this.renderer.toneMappingExposure = 0.82;
@@ -161,10 +169,6 @@ export class KiessScene {
 
     this.camera = new THREE.PerspectiveCamera(35, 1, 0.1, 100);
     this.camera.position.set(0, 0, 8);
-
-    const pmrem = new THREE.PMREMGenerator(this.renderer);
-    this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-    pmrem.dispose();
 
     // Éclairage sobre : le dégradé de marque doit rester saturé (pas de rendu « saumon »)
     const key = new THREE.DirectionalLight('#ffffff', 1.25);
@@ -174,6 +178,41 @@ export class KiessScene {
     const fill = new THREE.PointLight('#ff2a40', 9, 20);
     fill.position.set(2.5, -3, 3);
     this.scene.add(key, rim, fill, new THREE.AmbientLight('#ffffff', 0.08));
+
+    this.resize();
+    window.addEventListener('resize', () => this.resize());
+    window.addEventListener('pointermove', (e) => {
+      this.pointer.set((e.clientX / window.innerWidth) * 2 - 1, -((e.clientY / window.innerHeight) * 2 - 1));
+    });
+    document.addEventListener('visibilitychange', () => {
+      this.running = document.visibilityState === 'visible';
+      if (this.running) this.timer.reset();
+    });
+
+    this.mobile = opts.mobile;
+  }
+
+  /**
+   * Lance la construction de la scène (une seule fois). Appelée après l'intro :
+   * le haut de page n'a pas besoin de la 3D pour s'afficher.
+   */
+  start(): Promise<void> {
+    this.building ??= this.build(this.mobile);
+    return this.building;
+  }
+
+  /**
+   * Construction en plusieurs tâches courtes (une pause entre chaque étape) :
+   * le navigateur reste réactif pendant le chargement au lieu de geler ~0,5 s.
+   */
+  private async build(mobile: boolean): Promise<void> {
+    const pause = () => new Promise<void>((r) => setTimeout(r, 0));
+    await pause();
+    const pmrem = new THREE.PMREMGenerator(this.renderer);
+    // Reflets doux (intensité 0,22 sur le logo) : une carte 128 px suffit et coûte 4× moins que 256
+    this.scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04, 0.1, 100, { size: 128 }).texture;
+    pmrem.dispose();
+    await pause();
 
     // Logo K? 3D
     const logoMat = new THREE.MeshPhysicalMaterial({
@@ -191,9 +230,10 @@ export class KiessScene {
     this.glow.position.z = -1.4;
     this.pivot.add(this.glow);
     this.scene.add(this.pivot);
+    await pause();
 
     // Champ de petits cœurs
-    const count = opts.mobile ? 14 : 30;
+    const count = mobile ? 14 : 30;
     const smallGeo = heartShapeGeometry(10, 3);
     const smallMat = new THREE.MeshStandardMaterial({ roughness: 0.3, metalness: 0.05, envMapIntensity: 0.9 });
     this.field = new THREE.InstancedMesh(smallGeo, smallMat, count);
@@ -213,23 +253,17 @@ export class KiessScene {
     }
     this.scene.add(this.field);
 
-    this.resize();
-    window.addEventListener('resize', () => this.resize());
-    window.addEventListener('pointermove', (e) => {
-      this.pointer.set((e.clientX / window.innerWidth) * 2 - 1, -((e.clientY / window.innerHeight) * 2 - 1));
-    });
-    document.addEventListener('visibilitychange', () => {
-      this.running = document.visibilityState === 'visible';
-      if (this.running) this.timer.reset();
-    });
-
-    this.ready = Promise.resolve();
+    // Shaders compilés en parallèle (KHR_parallel_shader_compile) avant la
+    // première image : sans ça, le premier rendu gèle la page le temps de la
+    // compilation, en plein chargement.
+    await this.renderer.compileAsync(this.scene, this.camera).catch(() => undefined);
     this.renderer.setAnimationLoop(() => this.frame());
   }
 
   private resize() {
     const w = window.innerWidth;
     const h = window.innerHeight;
+    this.viewH = h;
     this.renderer.setSize(w, h, false);
     this.camera.aspect = w / h;
     this.camera.updateProjectionMatrix();
@@ -288,7 +322,7 @@ export class KiessScene {
       const d = this.fieldData[i];
       const spread = (this.camera.position.z - d.z) / this.camera.position.z;
       const Hd = this.visH * 1.3 * spread;
-      const scrollShift = ((this.scrollY / window.innerHeight) * this.visH * 0.45) / spread;
+      const scrollShift = ((this.scrollY / this.viewH) * this.visH * 0.45) / spread;
       let y = d.y * Hd + scrollShift + Math.sin(t * 0.4 + d.ph) * 0.15 * motion;
       y = ((((y + Hd / 2) % Hd) + Hd) % Hd) - Hd / 2;
       this.dummy.position.set(d.x * this.visW * spread + (this.pointerSmooth.x * 0.3) / spread, y, d.z);

@@ -1,32 +1,65 @@
 # Kiess — configuration pour Hostinger (LiteSpeed / Apache)
-# Le HTTPS se force depuis hPanel (Sécurité > SSL > « Forcer HTTPS »).
+# Copié tel quel à la racine de public_html avec le reste du site.
 
 Options -Indexes
+DirectoryIndex index.html
+ErrorDocument 404 /404.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # HTTPS obligatoire (redirection permanente)
+  RewriteCond %{HTTPS} !=on
+  RewriteCond %{HTTP:X-Forwarded-Proto} !=https
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+  # Une seule adresse pour les moteurs de recherche : www.kiess.fr → kiess.fr
+  # (supprimer ces 2 lignes si le site doit être servi sur www)
+  RewriteCond %{HTTP_HOST} ^www\.(.+)$ [NC]
+  RewriteRule ^ https://%1%{REQUEST_URI} [L,R=301]
+
+  # Fichiers cachés et fichiers techniques jamais servis
+  RewriteRule (^|/)\.(?!well-known/) - [F]
+  RewriteRule \.(sql|md|log|ini|bak|old|sh|env|lock|ts|map)$ - [F,NC]
+</IfModule>
 
 <IfModule mod_mime.c>
   AddType video/mp4 .mp4
   AddType image/webp .webp
   AddType font/woff2 .woff2
   AddType image/svg+xml .svg
+  AddType application/xml .xml
 </IfModule>
 
 <IfModule mod_deflate.c>
-  AddOutputFilterByType DEFLATE text/html text/css application/javascript image/svg+xml application/json
+  AddOutputFilterByType DEFLATE text/html text/css text/plain application/javascript image/svg+xml application/json application/xml
 </IfModule>
 
 <IfModule mod_headers.c>
+  # ── Sécurité (même liste que SECURITY_HEADERS dans vite.config.ts) ──
+  # CSP : n'autorise que les fichiers de ce site. Si le formulaire doit parler
+  # à une API sur un autre domaine (VITE_API_URL), l'ajouter à connect-src.
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; media-src 'self' blob:; font-src 'self'; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=()"
+  Header always set Cross-Origin-Opener-Policy "same-origin"
+  Header always unset X-Powered-By
+  Header unset X-Powered-By
+
+  # ── Cache ──
   # Fichiers versionnés par Vite (nom avec empreinte) : cache long
   <FilesMatch "\.(js|css|woff2?)$">
     Header set Cache-Control "public, max-age=31536000, immutable"
   </FilesMatch>
   # Médias et images : 1 semaine
-  <FilesMatch "\.(mp4|jpg|jpeg|webp|png|svg)$">
+  <FilesMatch "\.(mp4|jpg|jpeg|webp|png|svg|ico)$">
     Header set Cache-Control "public, max-age=604800"
   </FilesMatch>
-  # La page elle-même : toujours revalidée, pour voir les mises à jour tout de suite
-  <FilesMatch "\.html$">
+  # Pages, robots.txt, sitemap : toujours revalidés, pour voir les mises à jour tout de suite
+  <FilesMatch "\.(html|txt|xml)$">
     Header set Cache-Control "no-cache"
   </FilesMatch>
-  Header set X-Content-Type-Options "nosniff"
-  Header set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>

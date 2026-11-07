@@ -1,160 +1,195 @@
 # Kiess — site vitrine & préinscription
 
-Site statique (Vite + TypeScript + Three.js + GSAP + Lenis), une seule page, en français.
-Le formulaire de préinscription envoie les inscriptions à l'API Kiess
-(`POST /pre-registrations`, module [`api/src/pre-registrations`](../api/src/pre-registrations)),
-qui les enregistre dans la table `PreRegistration` de la base Postgres.
+Site statique (Vite + TypeScript + Three.js + GSAP + Lenis) en français : page d'accueil,
+mentions légales, politique de confidentialité, page 404.
+
+Les préinscriptions sont enregistrées, par défaut, **dans la base MySQL de l'hébergement
+Hostinger** par le script livré avec le site (`public/api/preinscription.php`). Quand l'API
+Kiess sera en ligne, une seule variable (`VITE_API_URL`) bascule le formulaire vers
+`POST /pre-registrations` (module [`api/src/pre-registrations`](../api/src/pre-registrations),
+table Postgres `PreRegistration`). Les deux appliquent exactement les mêmes règles.
 
 ## Lancer
 
 ```bash
 cd web
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5173 (formulaire en mode démo : rien n'est envoyé)
 npm run build      # typecheck + build → dist/
-npm run preview    # sert dist/ sur http://localhost:4173
+npm run preview    # sert dist/ avec les mêmes en-têtes de sécurité qu'en production
 ```
 
 Node 20+ (testé avec Node 24).
 
 ## Variables d'environnement
 
-Copier `.env.example` en `.env` :
+Copier `.env.example` en `.env`. Les variables `VITE_*` sont injectées **au build**.
 
 | Clé | Rôle |
 | --- | --- |
-| `VITE_API_URL` | Adresse de l'API (même valeur que `EXPO_PUBLIC_API_URL` du mobile). Le formulaire poste sur `{VITE_API_URL}/pre-registrations`, les liens légaux pointent vers `{VITE_API_URL}/legal/cgu` et `/legal/privacy`. **Vide = mode démo** : rien n'est envoyé, l'écran de succès affiche « Mode démo ». |
-| `VITE_BETA_ENDPOINT` | Facultatif : URL complète du formulaire si elle diffère de la précédente. |
-| `VITE_CGU_URL` / `VITE_PRIVACY_URL` | Facultatifs : liens légaux s'ils sont hébergés ailleurs. |
+| `VITE_SITE_URL` | Adresse publique du site (défaut `https://kiess.fr`) : balises canonical, Open Graph, sitemap. |
+| `VITE_API_URL` | Facultatif. Si renseignée, le formulaire poste sur `{VITE_API_URL}/pre-registrations` au lieu du script PHP. **Ajouter alors ce domaine à `connect-src`** dans `public/.htaccess` (CSP). |
+| `VITE_BETA_ENDPOINT` | Facultatif : URL complète du formulaire, prioritaire sur tout le reste. |
 
-Les variables `VITE_*` sont injectées **au build** : rebuild après modification.
+## Mise en ligne sur Hostinger (hébergement web)
 
-### Brancher le formulaire sur la base (une fois l'API déployée)
+1. **Base de données** — hPanel → Bases de données → Gestion : créer une base MySQL et
+   son utilisateur (noter nom de base, utilisateur, mot de passe).
+2. **Identifiants** — gestionnaire de fichiers : dans le dossier du domaine, **à côté** de
+   `public_html` (pas dedans), créer `kiess-config.php` à partir de
+   [`server/kiess-config.exemple.php`](server/kiess-config.exemple.php). Ainsi les
+   identifiants ne sont jamais accessibles depuis le web.
+   ```
+   domains/kiess.fr/
+   ├── kiess-config.php   ← ici
+   └── public_html/       ← contenu de dist/
+   ```
+3. **Site** — `npm run build`, puis envoyer le **contenu** de `dist/` dans `public_html`
+   (fichiers cachés `.htaccess` compris).
+4. **PHP** — hPanel → Avancé → Configuration PHP : version 8.1 ou plus.
+5. **SSL** — hPanel → Sécurité → SSL : certificat actif. Le `.htaccess` force déjà le HTTPS.
+6. **Test** — faire une préinscription : les tables `preinscriptions` et
+   `preinscription_limites` se créent toutes seules à la première demande.
+7. **Référencement** — déclarer `https://kiess.fr/sitemap.xml` dans Google Search Console.
 
-1. **API** (Render → Environment) :
-   - `CORS_ORIGINS` : ajouter le domaine du site, ex. `https://kiess.fr,https://www.kiess.fr`
-     (sans quoi le navigateur bloque l'envoi) ;
-   - `TRUST_PROXY=1` (déjà dans `render.yaml`) : sans lui, la limite de 5 envois/minute
-     s'applique à tous les visiteurs à la fois ;
-   - `ADMIN_TOKEN` : jeton long et aléatoire pour consulter les préinscriptions.
-   La migration `20261107100000_pre_registration` crée la table au démarrage
-   (`prisma migrate deploy`).
-2. **Site** : `VITE_API_URL=https://<adresse-de-l-api>` dans `web/.env`, puis `npm run build`
-   et envoi de `dist/` sur l'hébergement.
-3. Tester une préinscription depuis le site : la ligne apparaît dans `PreRegistration`
-   (Prisma Studio : `cd api && npx prisma studio`).
+### Sélectionner les profils (phpMyAdmin)
 
-## Contrat de l'endpoint de préinscription
+hPanel → Bases de données → phpMyAdmin → onglet SQL :
+
+```sql
+-- Femmes de 20 à 30 ans en attente, premières inscrites d'abord
+SELECT id, email, gender, preferences, birth_date,
+       TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) AS age, source, created_at
+FROM preinscriptions
+WHERE status = 'pending' AND gender = 'une femme'
+  AND TIMESTAMPDIFF(YEAR, birth_date, CURDATE()) BETWEEN 20 AND 30
+ORDER BY created_at;
+
+-- Retenir des profils (pending → selected → invited ; ou rejected)
+UPDATE preinscriptions SET status = 'selected' WHERE id IN (12, 15, 31);
+
+-- Répartition par statut et par genre
+SELECT status, gender, COUNT(*) FROM preinscriptions GROUP BY status, gender;
+
+-- Droit à l'effacement (demande reçue sur support@kiess.fr)
+DELETE FROM preinscriptions WHERE email = 'adresse@exemple.fr';
+```
+
+`preferences` : `homme,femme,nb` séparés par des virgules ; vide = « tout le monde ».
+Export CSV : phpMyAdmin → Exporter. Le mot de passe est stocké en **argon2id** avec les
+réglages de l'app (`api/src/auth/password.util.ts`) : ces comptes pourront être importés
+tels quels dans la table `PreRegistration` / `User` de l'API (vérifié avec `argon2.verify`).
+
+À faire au moment des invitations : le mail « ton accès est prêt » promis sur l'écran de
+succès, et la purge des préinscriptions de plus de 24 mois (durée annoncée dans la
+politique de confidentialité).
+
+## Contrat du formulaire
 
 Côté site : [`src/beta/submit.ts`](src/beta/submit.ts) (seul fichier qui parle au réseau).
-Côté API : [`CreatePreRegistrationDto`](../api/src/pre-registrations/dto/create-pre-registration.dto.ts) :
-toute clé absente du DTO est refusée, garder les deux alignés.
-
-```http
-POST {VITE_API_URL}/pre-registrations
-Content-Type: application/json
-```
+Côté serveur : [`public/api/preinscription.php`](public/api/preinscription.php) et
+[`CreatePreRegistrationDto`](../api/src/pre-registrations/dto/create-pre-registration.dto.ts) :
+toute clé inconnue est refusée, garder les trois alignés.
 
 ```jsonc
 {
   "email": "camille@exemple.fr",          // trim + minuscules
-  "password": "Kiess2026",                // ≥ 8 caractères, 1 majuscule, 1 chiffre (mêmes règles que CompleteSignupDto)
-  "gender": "une femme",                  // "un homme" | "une femme" | "non binaire" | "autres" (libellés de l'onboarding mobile)
-  "preferences": ["homme"],               // sous-ensemble de "homme" | "femme" | "nb" ; [] = tout le monde (cf. matching/compatibility.ts)
+  "password": "Kiess2026",                // 8 à 128 caractères, 1 majuscule, 1 chiffre
+  "gender": "une femme",                  // "un homme" | "une femme" | "non binaire" | "autres"
+  "preferences": ["homme"],               // sous-ensemble de "homme" | "femme" | "nb" ; [] = tout le monde
   "birthDate": "1999-03-12",              // AAAA-MM-JJ, 18 ans minimum
-  "acceptedTerms": true,
+  "acceptedTerms": true,                  // consentement (politique de confidentialité, art. 9 RGPD)
   "marketingOptIn": false,
   "website": "",                          // pot de miel : si rempli, réponse 201 mais rien n'est enregistré
   "source": { "utm_source": "instagram" },// facultatif (paramètres utm_* / ref de l'URL)
-  "submittedAt": "2026-11-06T10:00:00.000Z"
+  "submittedAt": "2026-11-07T10:00:00.000Z"
 }
 ```
 
-Réponses de l'API et affichage sur le site :
-
 | Statut | Cas | Affichage |
 | --- | --- | --- |
-| `201` | Enregistré (ou pot de miel rempli) | Écran « Demande envoyée » |
-| `409` | E-mail déjà préinscrit | « Cette adresse mail est déjà préinscrite. » |
-| `400` | Donnée refusée (moins de 18 ans, date impossible, mot de passe faible…) | `message` du corps, mêmes textes que la validation du site |
-| `429` | Plus de 5 envois par minute depuis la même IP | « Trop de tentatives… » |
-| autre / réseau | | Message générique |
+| `201` | Enregistré, pot de miel rempli, ou e-mail déjà inscrit (PHP : ne révèle jamais qui est inscrit) | « Demande envoyée » |
+| `409` | E-mail déjà inscrit (API Nest uniquement) | « Cette adresse mail est déjà préinscrite. » |
+| `400` | Donnée refusée (moins de 18 ans, date impossible, mot de passe faible…) | `message` du corps |
+| `429` | Plus de 5 envois par minute (ou 30 par jour) depuis la même IP | « Trop de tentatives… » |
+| autre | Base indisponible, réseau | Message générique |
 
-Côté serveur : revalidation de tous les champs, mot de passe hashé en argon2id (comme les
-comptes de l'app), e-mail en minuscules et unique, source réduite aux clés `utm_*` / `ref`.
+Protections du script PHP : même origine uniquement (en-têtes `Origin` / `Sec-Fetch-Site`),
+JSON obligatoire, 8 Ko maximum, requêtes SQL préparées, limite par IP stockée sous forme
+d'empreinte HMAC 24 h (jamais l'adresse en clair), identifiants hors du dossier public,
+`api/.htaccess` qui n'expose que `preinscription.php`.
 
-### Sélectionner les profils
+## SEO, sécurité, données
 
-Chaque préinscription a un statut `pending` → `selected` / `rejected` → `invited`.
-Routes protégées par l'en-tête `X-Admin-Token` (variable `ADMIN_TOKEN` de l'API) :
+- **SEO** : title / description, canonical, Open Graph + Twitter (`og-kiess.jpg` 1200×630),
+  favicons (ico, svg, apple-touch), données structurées Organization / WebSite / FAQPage
+  générées depuis la FAQ visible, `robots.txt` et `sitemap.xml` générés au build
+  (plugin `kiess-seo` de `vite.config.ts`), page 404 en `noindex`.
+- **En-têtes** (`public/.htaccess`, repris par `npm run preview`) : CSP stricte (aucun script
+  ni style en ligne, uniquement les fichiers du site), HSTS, X-Frame-Options, nosniff,
+  Referrer-Policy, Permissions-Policy, COOP ; HTTPS forcé, `www` redirigé, fichiers
+  techniques bloqués. Pas de `style="…"` ni de `<script>` en ligne dans le code : passer
+  par `element.style.setProperty()`.
+- **Données** : aucun cookie, traceur ni service tiers (polices et médias auto-hébergés).
+  Consentement explicite et versionné (`consent_version`), pages `/confidentialite/` et
+  `/mentions-legales/`. **Les champs surlignés en jaune** dans ces deux pages (éditeur,
+  SIRET, directeur de la publication) **sont à compléter avant la mise en ligne**.
+- **Lighthouse** (build de production, GPU) : mobile 88 / 100 / 100 / 100, desktop
+  97 / 100 / 100 / 100 (performance / accessibilité / bonnes pratiques / SEO).
 
-```bash
-# Femmes de 20 à 30 ans encore en attente, les premières inscrites d'abord
-curl -H "X-Admin-Token: $ADMIN_TOKEN" \
-  "$API/admin/pre-registrations?status=pending&gender=une%20femme&minAge=20&maxAge=30&limit=100"
+## Performance
 
-# Retenir un profil
-curl -X PATCH -H "X-Admin-Token: $ADMIN_TOKEN" -H "Content-Type: application/json" \
-  -d '{"status":"selected"}' "$API/admin/pre-registrations/<id>"
-```
-
-La liste renvoie `{ total, limit, offset, counts, items }` (âge calculé, jamais le hash du mot de passe).
-Filtres : `status`, `gender` (`un homme` | `une femme` | `non binaire` | `autres`), `minAge`, `maxAge`,
-`limit` (≤ 500), `offset`.
-
-Le message de succès promet un mail « dès que ton accès est prêt » : cet envoi reste à faire
-au moment des invitations (statut `invited`).
-
-⚠️ L'API est sur l'offre gratuite de Render : après inactivité, la première requête peut
-prendre ~50 s. Le bouton reste en « Envoi… » pendant ce temps ; passer sur une offre payante
-(ou un endpoint séparé) avant d'ouvrir les inscriptions.
-
-## Déploiement
-
-`npm run build` produit un dossier `dist/` 100 % statique (Hostinger, Netlify, Cloudflare Pages…).
-Aucun serveur Node requis. Sur Hostinger : contenu de `dist/` dans `public_html`
-(le fichier `public/.htaccess` gère cache, compression et types MIME).
+- three.js est chargé à part (`import()` dynamique) pendant l'intro ; la scène 3D est
+  construite en plusieurs tâches courtes après l'intro puis affichée en fondu : le haut de
+  page (titre + iPhone) n'attend pas la 3D.
+- Aucune lecture de mise en page à chaque image (`getBoundingClientRect`, `scrollY`,
+  `innerWidth`, `scrollWidth`) : positions mesurées au redimensionnement uniquement.
+- Shaders compilés en parallèle (`compileAsync`), `checkShaderErrors` désactivé en production.
 
 ## Structure
 
 ```
 web/
-├── index.html              Contenu et textes de toutes les sections + formulaire (dialog)
+├── index.html              Accueil : contenu de toutes les sections + formulaire (dialog)
+├── mentions-legales/       Mentions légales
+├── confidentialite/        Politique de confidentialité
+├── 404.html                Page introuvable
+├── server/                 Modèle de kiess-config.php (non publié)
 ├── public/
-│   ├── media/              Médias optimisés (générés avec Higgsfield, voir plus bas)
+│   ├── .htaccess           HTTPS, en-têtes de sécurité, cache (Hostinger)
+│   ├── api/                preinscription.php + .htaccess
+│   ├── media/              Médias optimisés (générés avec Higgsfield)
 │   └── assets/             Logos, cœurs et pièces repris de mobile/assets/figma
 ├── media-src/              Fiches des générations Higgsfield (prompts, ids) ; rushes bruts ignorés par git
 └── src/
     ├── main.ts             Orchestration : Lenis, chargement, trajet du logo 3D au scroll, intro
-    ├── three/scene.ts      Scène WebGL : logo K? 3D (extrudé depuis l'EPS), petits cœurs, halo
+    ├── three/scene.ts      Scène WebGL (chargée à part) : logo K? 3D extrudé depuis l'EPS, petits cœurs, halo
     ├── sections.ts         Film, radar, slots, ticket, chat, grille de révélation, jeux, curseur…
     ├── beta/form.ts        Formulaire en 5 étapes (validation, navigation)
-    ├── beta/submit.ts      Envoi + contrat backend
+    ├── beta/submit.ts      Envoi + contrat serveur
     ├── logo.ts / badges.ts Tracés du logo (K? issu de « logo eps/EPS/Group.eps ») et pictogrammes de badges
     ├── config.ts           Lecture des variables VITE_*
+    ├── legal.css           Styles des pages légales et 404
     └── style.css           Styles (tokens de DESIGN_TOKENS.md)
 ```
 
 Trajet du logo 3D : chaque section porte `data-heart="x,y,taille,rotation"` (desktop) et
 `data-heart-m` (mobile ≤ 820 px). `x`/`y` en fraction de l'écran (−0.5 … 0.5), `taille` en
-fraction de la hauteur ; `taille = 0` masque le cœur.
+fraction de la hauteur ; `taille = 0` masque le logo.
 
 ## Médias générés (Higgsfield)
 
 | Fichier | Modèle | Détail |
 | --- | --- | --- |
 | `public/media/hero.mp4` (+ `hero-mobile.mp4`) | Kling 3.0 Pro, 10 s, 16:9 | silhouettes face à face dans un brouillard magenta ; boucle aller-retour, H.264 sans son |
-| `public/media/reveal.mp4` | Kling 3.0 Pro, 10 s, 1:1 | portrait « Julia » ; GOP court pour être piloté par le scroll |
+| `public/media/reveal.mp4` | Kling 3.0 Pro, 10 s, 1:1 | portrait ; GOP court pour être piloté par le scroll |
 
-Prompts exacts dans `media-src/*.json`. Personnes fictives générées par IA.
+Prompts exacts dans `media-src/*.json`. Personnes fictives générées par IA (mentionné dans
+les mentions légales).
 
-Le logo 3D n'est pas un fichier : il est extrudé en temps réel (Three.js) depuis les tracés vectoriels
-du K? officiel (`src/logo.ts`, extraits de l'EPS Illustrator). Le cœur 3D Tripo (`media-src/heart.glb`)
-n'est plus utilisé.
-
-## Accessibilité & perfs
+## Accessibilité
 
 - `prefers-reduced-motion` : pas de défilement fluide, animations coupées, vidéo de révélation en lecture simple.
 - Sans WebGL : le logo 3D est remplacé par `assets/k-logo.svg`.
-- Mobile : moins de particules, DPR plafonné, vidéo hero 720p (272 Ko).
-- Polices Roboto auto-hébergées (`@fontsource`) : aucun appel à Google Fonts (RGPD).
+- Sans JavaScript : l'écran de chargement s'efface seul après 8 s, le contenu reste lisible.
+- Contrastes AA vérifiés (Lighthouse 100).

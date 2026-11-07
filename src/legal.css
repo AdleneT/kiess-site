@@ -1,0 +1,186 @@
+/* Pages légales (mentions légales, confidentialité, 404) : sobres, lisibles, aux couleurs de Kiess. */
+@import '@fontsource/roboto/400.css';
+@import '@fontsource/roboto/700.css';
+@import '@fontsource/roboto/900-italic.css';
+
+:root {
+  --ink: #1f1f1f;
+  --text: #343434;
+  --muted: #646464;
+  --line: #ececec;
+  --bg-soft: #f8f4f5;
+  --red-text: #d81f3c;
+  --grad-text: linear-gradient(126.11deg, #ca2f72 8.07%, #fc2d3d 101.39%);
+  color-scheme: light;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+  color: var(--text);
+  font: 400 16px/1.65 Roboto, system-ui, sans-serif;
+}
+
+a {
+  color: var(--red-text);
+  text-underline-offset: 3px;
+}
+
+.legal-head {
+  border-bottom: 1px solid var(--line);
+}
+
+.legal-head .wrap {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 18px;
+  padding-bottom: 18px;
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 900;
+  font-style: italic;
+  font-size: 22px;
+  letter-spacing: -0.02em;
+}
+
+.back {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--muted);
+  text-decoration: none;
+}
+
+.back:hover {
+  color: var(--ink);
+}
+
+.wrap {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+
+main.wrap {
+  padding-top: 48px;
+  padding-bottom: 72px;
+}
+
+h1 {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: clamp(30px, 6vw, 44px);
+  line-height: 1.1;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: -0.02em;
+}
+
+h1 span {
+  background: var(--grad-text);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+h2 {
+  margin: 40px 0 10px;
+  color: var(--ink);
+  font-size: 20px;
+  line-height: 1.3;
+}
+
+.updated {
+  margin: 0 0 32px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.lead {
+  font-size: 18px;
+  color: var(--ink);
+}
+
+ul {
+  padding-left: 20px;
+}
+
+li + li {
+  margin-top: 6px;
+}
+
+.card {
+  margin: 16px 0;
+  padding: 18px 20px;
+  border-radius: 16px;
+  background: var(--bg-soft);
+}
+
+.card p {
+  margin: 0;
+}
+
+.card p + p {
+  margin-top: 6px;
+}
+
+/* Champ à renseigner avant la mise en ligne */
+.todo {
+  padding: 0 4px;
+  border-radius: 4px;
+  background: #fff1a8;
+  color: #6b4e00;
+  font-weight: 700;
+}
+
+.legal-foot {
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.legal-foot .wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding-top: 20px;
+  padding-bottom: 28px;
+}
+
+.legal-foot a {
+  color: var(--muted);
+}
+
+.notfound {
+  text-align: center;
+  padding-top: 15vh;
+}
+
+.btn {
+  display: inline-block;
+  margin-top: 24px;
+  padding: 14px 28px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ca2f72 0%, #fc2d3d 100%);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+}

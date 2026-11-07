@@ -6,3 +6,7 @@ dist
 media-src/*.mp4
 media-src/*.glb
 kiess-site.zip
+
+# Identifiants de la base Hostinger : jamais dans git
+kiess-config.php
+public/api/config.php
