@@ -34,6 +34,9 @@ export function securityHeaders(connect: string[]): Record<string, string> {
     'Referrer-Policy': 'strict-origin',
     'Permissions-Policy': 'camera=(), microphone=(), geolocation=(), payment=(), usb=()',
     'Cross-Origin-Opener-Policy': 'same-origin',
+    // Les fichiers du site ne peuvent pas être chargés par une autre page web.
+    'Cross-Origin-Resource-Policy': 'same-origin',
+    'X-Permitted-Cross-Domain-Policies': 'none',
   };
 }
 
