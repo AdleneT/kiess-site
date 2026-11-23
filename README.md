@@ -16,9 +16,15 @@ pseudo + mot de passe).
 accueil : conditions + façon de s’inscrire
   ├─ Apple · Google · Facebook · Discord ─────────────┐
   └─ numéro de téléphone → code SMS ──────────────────┤
-e-mail → prénom → nom → pseudo → genre → date de naissance → ville → mot de passe → photo
+e-mail → prénom → nom → pseudo → genre → date de naissance
+→ secteur d’activité → métier ou études (sauté si secteur non dit) → origines
+→ origines recherchées (privé) → spiritualité → ville → mot de passe → photo
 → POST /auth/complete-signup → « Bravo ! »            (compte déjà complet → « Déjà inscrit·e »)
 ```
+
+Les infos de la carte (secteur, métier, origines, origines recherchées, spiritualité) demandent
+une API qui les connaît (Kiess, migration `20261123120000_profile_identity`) : l’API refuse les
+champs inconnus, donc **déployer l’API avant le site**.
 
 ## Lancer
 
@@ -140,6 +146,7 @@ kiess-site/
     ├── signup/oauth.ts     Apple / Google / Facebook / Discord (redirection, state, nonce)
     ├── signup/photo.ts     Recadrage carré + JPEG
     ├── signup/validation.ts Règles identiques à l’app
+    ├── signup/profile-options.ts Infos de la carte (secteur, origines, spiritualité) : copie de Kiess mobile/profileOptions.ts
     ├── logo.ts / badges.ts Tracés du logo (K? issu de « logo eps/EPS/Group.eps ») et pictogrammes de badges
     ├── config.ts           Lecture des variables VITE_*
     ├── legal.css           Styles des pages légales et 404
