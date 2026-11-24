@@ -29,11 +29,6 @@ export interface Profile {
   city?: string;
   photoUrl?: string;
   onboardingStage?: string;
-  sector?: string | null;
-  occupation?: string | null;
-  origins?: string[] | null;
-  originsSought?: string[] | null;
-  spirituality?: string | null;
 }
 
 export interface CompleteSignupInput {
@@ -45,13 +40,6 @@ export interface CompleteSignupInput {
   gender: string;
   birthDate: string;
   city: string;
-  /** Infos de la carte de profil (src/signup/profile-options.ts), toutes facultatives pour l'API. */
-  sector?: string;
-  occupation?: string;
-  origins?: string[];
-  /** Vide = « Peu importe ». Privé : jamais montré aux autres. */
-  originsSought?: string[];
-  spirituality?: string;
   marketingOptIn: boolean;
   acceptedTerms: boolean;
   acceptedPrivacy: boolean;

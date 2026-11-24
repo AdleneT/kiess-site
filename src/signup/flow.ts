@@ -6,14 +6,8 @@
  *   accueil (conditions + façon de s'inscrire)
  *     → Apple / Google / Facebook / Discord      → e-mail
  *     → numéro → code SMS                         → e-mail
- *   e-mail → prénom → nom → pseudo → genre → date de naissance
- *   → secteur d'activité → métier ou études → origines → origines recherchées
- *   → spiritualité → ville → mot de passe → photo
- *   → POST /auth/complete-signup → « Bravo ! »
- *
- * Secteur « Ne préfère pas le dire » : l'étape du métier est sautée, comme
- * dans l'app. Les infos de la carte suivent mobile/profileOptions.ts (copie
- * dans ./profile-options.ts).
+ *   e-mail → prénom → nom → pseudo → genre → date de naissance → ville
+ *   → mot de passe → photo → POST /auth/complete-signup → « Bravo ! »
  *
  * Un compte déjà complet (connexion sociale ou numéro déjà inscrits) affiche
  * « Déjà inscrit·e » au lieu de reprendre l'inscription.
@@ -22,20 +16,6 @@ import type { Provider } from '../config';
 import { api, ApiError, DEMO, hasSession, type Profile } from './api';
 import { devToken, isAvailable, PROVIDER_LABELS, redirectUri, startOAuth, usesDevToken, type OAuthReturn } from './oauth';
 import { MAX_INPUT_BYTES, toSquareJpeg } from './photo';
-import {
-  ANY_ORIGIN,
-  isOrigin,
-  isSector,
-  isSpirituality,
-  optionLabel,
-  ORIGIN_OPTIONS,
-  SECTOR_OPTIONS,
-  SOUGHT_ORIGIN_OPTIONS,
-  SPIRITUALITY_OPTIONS,
-  toggleChoice,
-  UNDISCLOSED,
-  type ProfileOption,
-} from './profile-options';
 import {
   ADULT_AGE,
   ageFromIso,
@@ -64,11 +44,6 @@ type Step =
   | 'username'
   | 'gender'
   | 'birthDate'
-  | 'sector'
-  | 'occupation'
-  | 'origins'
-  | 'originsSought'
-  | 'spirituality'
   | 'city'
   | 'password'
   | 'photo'
@@ -76,31 +51,7 @@ type Step =
   | 'existing';
 type Method = Provider | 'phone';
 
-const PROFILE_STEPS: Step[] = [
-  'email',
-  'firstName',
-  'lastName',
-  'username',
-  'gender',
-  'birthDate',
-  'sector',
-  'occupation',
-  'origins',
-  'originsSought',
-  'spirituality',
-  'city',
-  'password',
-  'photo',
-];
-
-/** Étapes à pastilles (infos de la carte) : choix unique ou multiple, valeurs exclusives. */
-type ChipStep = 'sector' | 'origins' | 'originsSought' | 'spirituality';
-const CHIPS: Record<ChipStep, { options: readonly ProfileOption[]; multi: boolean; exclusive: readonly string[] }> = {
-  sector: { options: SECTOR_OPTIONS, multi: false, exclusive: [] },
-  origins: { options: ORIGIN_OPTIONS, multi: true, exclusive: [UNDISCLOSED] },
-  originsSought: { options: SOUGHT_ORIGIN_OPTIONS, multi: true, exclusive: [ANY_ORIGIN] },
-  spirituality: { options: SPIRITUALITY_OPTIONS, multi: false, exclusive: [] },
-};
+const PROFILE_STEPS: Step[] = ['email', 'firstName', 'lastName', 'username', 'gender', 'birthDate', 'city', 'password', 'photo'];
 const PATHS: Record<'phone' | 'social', Step[]> = {
   phone: ['welcome', 'phone', 'phoneCode', ...PROFILE_STEPS],
   social: ['welcome', ...PROFILE_STEPS],
@@ -122,11 +73,6 @@ const MSG = {
   gender: 'Tu dois choisir ton genre, tu pourras le modifier plus tard',
   birthDateFormat: 'Entre une date valide au format JJ/MM/AAAA',
   tooYoung: 'Tu es trop jeune pour utiliser Kiess',
-  sector: 'Choisis un secteur, ou « Ne préfère pas le dire »',
-  occupation: 'Écris ton métier ou tes études, ou coche « Ne préfère pas le dire »',
-  origins: 'Choisis au moins une réponse, ou « Ne préfère pas le dire »',
-  originsSought: 'Choisis au moins une réponse, ou « Peu importe »',
-  spirituality: 'Choisis une réponse, ou « Ne préfère pas le dire »',
   city: 'Entre le nom de ta ville',
   passwordEmpty: 'Entre et confirme ton mot de passe',
   passwordRules: 'Ton mot de passe doit contenir au moins 8 caractères, des majuscules et des chiffres',
@@ -224,7 +170,6 @@ export function initSignup(hooks: Hooks = {}) {
     steps.forEach((s) => s.classList.remove('has-error'));
     clearPhoto();
     updatePwRules();
-    relabelChips();
     method = null;
     normalizedPhone = '';
     clearState();
@@ -232,11 +177,7 @@ export function initSignup(hooks: Hooks = {}) {
   }
 
   // ── Navigation ─────────────────────────────────────────────────────────
-  const path = () => {
-    const steps = PATHS[method === 'phone' ? 'phone' : 'social'];
-    // Secteur non dit : pas de métier sur la carte, l'étape est sautée (comme dans l'app).
-    return selectedSector() === UNDISCLOSED ? steps.filter((s) => s !== 'occupation') : steps;
-  };
+  const path = () => PATHS[method === 'phone' ? 'phone' : 'social'];
 
   function show(step: Step, focus = true) {
     const order = [...path(), ...DONE];
@@ -425,15 +366,6 @@ export function initSignup(hooks: Hooks = {}) {
       const radio = form.querySelector<HTMLInputElement>(`input[name=gender][value="${CSS.escape(profile.gender)}"]`);
       if (radio) radio.checked = true;
     }
-    // Infos de la carte déjà connues (inscription reprise)
-    if (isSector(profile.sector) && !selectedSector()) setChecked('sector', [profile.sector!]);
-    fill('occupation', profile.occupation ?? undefined);
-    const origins = (profile.origins ?? []).filter(isOrigin);
-    if (origins.length > 0 && checkedValues('origins').length === 0) setChecked('origins', origins);
-    const sought = (profile.originsSought ?? []).filter(isOrigin);
-    if (sought.length > 0) setChecked('originsSought', sought);
-    if (isSpirituality(profile.spirituality) && checkedValues('spirituality').length === 0) setChecked('spirituality', [profile.spirituality!]);
-    relabelChips();
   }
 
   // ── Continuer ──────────────────────────────────────────────────────────
@@ -471,16 +403,6 @@ export function initSignup(hooks: Hooks = {}) {
         if (!iso || ageFromIso(iso) > 110) return MSG.birthDateFormat;
         return ageFromIso(iso) >= ADULT_AGE ? '' : MSG.tooYoung;
       }
-      case 'sector':
-        return isSector(selectedSector()) ? '' : MSG.sector;
-      case 'occupation':
-        return input('occupationUndisclosed').checked || occupationText() ? '' : MSG.occupation;
-      case 'origins':
-        return checkedValues('origins').length > 0 ? '' : MSG.origins;
-      case 'originsSought':
-        return checkedValues('originsSought').length > 0 ? '' : MSG.originsSought;
-      case 'spirituality':
-        return checkedValues('spirituality').length > 0 ? '' : MSG.spirituality;
       case 'city':
         return isValidCity(value('city')) ? '' : MSG.city;
       case 'password': {
@@ -500,74 +422,6 @@ export function initSignup(hooks: Hooks = {}) {
   // Effacer l'erreur dès que la saisie redevient valide
   form.addEventListener('input', () => {
     if (steps.get(current)?.classList.contains('has-error') && !validate(current)) setError(current, '');
-  });
-
-  // ── Infos de la carte : pastilles ──────────────────────────────────────
-  /** Libellés accordés au genre choisi (« Chrétienne », « Amérindien »…). */
-  const chipLabels: { option: ProfileOption; span: HTMLElement }[] = [];
-
-  (Object.keys(CHIPS) as ChipStep[]).forEach((name) => {
-    const { options, multi, exclusive } = CHIPS[name];
-    const box = form.querySelector<HTMLElement>(`[data-chips="${name}"]`)!;
-    box.replaceChildren(
-      ...options.map((option) => {
-        const label = document.createElement('label');
-        label.className = 'choice';
-        const el = document.createElement('input');
-        el.type = multi ? 'checkbox' : 'radio';
-        el.name = name;
-        el.value = option.value;
-        // « Peu importe » coché par défaut (form.reset() y revient)
-        el.defaultChecked = option.value === ANY_ORIGIN;
-        const span = document.createElement('span');
-        chipLabels.push({ option, span });
-        label.append(el, span);
-        el.addEventListener('change', () => {
-          if (multi) {
-            // Même logique que l'app : une valeur exclusive reste seule.
-            const others = checkedValues(name).filter((v) => v !== el.value);
-            const before = el.checked ? others : [...others, el.value];
-            setChecked(name, toggleChoice(before, el.value, exclusive));
-          } else {
-            setError(name, '');
-            window.setTimeout(() => current === name && go(1), 260);
-          }
-        });
-        return label;
-      }),
-    );
-  });
-  relabelChips();
-
-  function relabelChips() {
-    const gender = form.querySelector<HTMLInputElement>('input[name=gender]:checked')?.value;
-    chipLabels.forEach(({ option, span }) => (span.textContent = optionLabel(option, gender)));
-  }
-
-  function checkedValues(name: string): string[] {
-    return Array.from(form.querySelectorAll<HTMLInputElement>(`input[name="${name}"]:checked`)).map((i) => i.value);
-  }
-
-  function setChecked(name: string, values: readonly string[]) {
-    form.querySelectorAll<HTMLInputElement>(`input[name="${name}"]`).forEach((i) => (i.checked = values.includes(i.value)));
-  }
-
-  function selectedSector(): string {
-    return checkedValues('sector')[0] ?? '';
-  }
-
-  function occupationText(): string {
-    return input('occupation').value.replace(/\s+/g, ' ').trim();
-  }
-
-  // Métier écrit : la case « Ne préfère pas le dire » se décoche ; cochée, le champ se vide.
-  const occupationInput = input('occupation');
-  const occupationUndisclosed = input('occupationUndisclosed');
-  occupationInput.addEventListener('input', () => {
-    if (occupationInput.value.trim()) occupationUndisclosed.checked = false;
-  });
-  occupationUndisclosed.addEventListener('change', () => {
-    if (occupationUndisclosed.checked) occupationInput.value = '';
   });
 
   // ── Numéro + code SMS ──────────────────────────────────────────────────
@@ -673,8 +527,6 @@ export function initSignup(hooks: Hooks = {}) {
       setError('photo', MSG.invalid);
       return;
     }
-    const sector = selectedSector();
-    const origins = checkedValues('origins');
     try {
       await api.completeSignup({
         email: normalizeEmail(input('email').value),
@@ -685,13 +537,6 @@ export function initSignup(hooks: Hooks = {}) {
         gender: form.querySelector<HTMLInputElement>('input[name=gender]:checked')!.value,
         birthDate: iso,
         city: input('city').value.trim(),
-        sector: sector || undefined,
-        // Case « Ne préfère pas le dire » ou secteur non dit : pas de métier sur la carte.
-        occupation: input('occupationUndisclosed').checked || sector === UNDISCLOSED ? undefined : occupationText() || undefined,
-        origins: origins.length > 0 ? origins : undefined,
-        // « Peu importe » = aucune préférence (liste vide pour l'API)
-        originsSought: checkedValues('originsSought').filter((o) => o !== ANY_ORIGIN),
-        spirituality: checkedValues('spirituality')[0] || undefined,
         marketingOptIn: input('marketingOptIn').checked,
         acceptedTerms: true,
         acceptedPrivacy: true,
@@ -703,12 +548,6 @@ export function initSignup(hooks: Hooks = {}) {
         const target: Step = /pseudo/i.test(e.message) ? 'username' : /adresse|mail/i.test(e.message) ? 'email' : 'photo';
         show(target);
         setError(target, e.message || MSG.conflict);
-        return;
-      }
-      if (e instanceof ApiError && e.status === 400 && /termes non autorisés/i.test(e.message)) {
-        // Métier refusé par le filtre de l'API (le même que pour la bio)
-        show('occupation');
-        setError('occupation', e.message);
         return;
       }
       setError('photo', e instanceof ApiError && e.status === 400 ? MSG.invalid : await handleAuthError(e));
@@ -733,7 +572,6 @@ export function initSignup(hooks: Hooks = {}) {
   form.querySelectorAll<HTMLInputElement>('input[name=gender]').forEach((r) =>
     r.addEventListener('change', () => {
       setError('gender', '');
-      relabelChips();
       window.setTimeout(() => current === 'gender' && go(1), 260);
     }),
   );
