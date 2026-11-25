@@ -32,6 +32,10 @@ export interface Profile {
   onboardingStage?: string;
   /** Questionnaire déjà rempli (inscription reprise). */
   questionnaire?: Questionnaire;
+  sector?: string | null;
+  occupation?: string | null;
+  origins?: string[] | null;
+  spirituality?: string | null;
 }
 
 export interface CompleteSignupInput {
@@ -43,6 +47,11 @@ export interface CompleteSignupInput {
   gender: string;
   birthDate: string;
   city: string;
+  /** Infos de la carte de profil (src/signup/profile-options.ts), toutes facultatives pour l'API. */
+  sector?: string;
+  occupation?: string;
+  origins?: string[];
+  spirituality?: string;
   marketingOptIn: boolean;
   acceptedTerms: boolean;
   acceptedPrivacy: boolean;

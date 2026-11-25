@@ -6,7 +6,9 @@
  * Posé à l'inscription après la date de naissance ; obligatoire avant le
  * premier matchmaking (l'app le redemande sinon). Identifiants partagés avec
  * l'API (api/src/profiles/questionnaire.ts). Ce qui est recherché accepte
- * plusieurs réponses, et une liste vide veut dire « Peu importe ».
+ * plusieurs réponses, et une liste vide veut dire « Peu importe ». Le style
+ * accepte aussi plusieurs réponses (sans le dire à l'écran). La pilosité
+ * n'est pas demandée aux femmes (questionsFor).
  */
 
 export type Questionnaire = {
@@ -14,8 +16,9 @@ export type Questionnaire = {
   hairColor?: string;
   hairLength?: string;
   eyes?: string;
-  style?: string;
-  features?: string[];
+  /** Un style ou plusieurs (une seule chaîne avant le 25/11/2026 : answersOf la lit comme une liste). */
+  style?: string[];
+  pilosity?: string;
   seekHeights?: string[];
   seekSilhouettes?: string[];
   seekHairColors?: string[];
@@ -26,7 +29,8 @@ export type Questionnaire = {
 };
 
 export type QuestionKey = keyof Questionnaire;
-export type SingleKey = 'silhouette' | 'hairColor' | 'hairLength' | 'eyes' | 'style';
+export type SingleKey = 'silhouette' | 'hairColor' | 'hairLength' | 'eyes' | 'pilosity';
+export type GenderKind = 'm' | 'f' | 'x';
 export type MultiKey = Exclude<QuestionKey, SingleKey>;
 
 /** Libellé accordé : masculin, féminin, forme inclusive (genre inconnu ou personne recherchée). */
@@ -52,6 +56,10 @@ export type Question = {
   required: boolean;
   /** Liste vide acceptée et montrée comme « Peu importe » (ce qui est recherché). */
   anyLabel?: string;
+  /** Question pas posée pour ce genre (la pilosité aux femmes). */
+  notFor?: GenderKind;
+  /** Plusieurs réponses possibles sans le montrer (pas d'aide, ronds au lieu de cases). */
+  quietMulti?: boolean;
 };
 
 export const ANY = 'Peu importe';
@@ -105,14 +113,13 @@ const STYLES: QuestionOption[] = [
   { value: 'minimaliste', label: 'Minimaliste' },
 ];
 
-const FEATURES: QuestionOption[] = [
+/** Pilosité (une réponse, facultative) : remplace les signes distinctifs. */
+const PILOSITY: QuestionOption[] = [
+  { value: 'imberbe', label: 'Imberbe' },
+  { value: 'barbe_courte', label: 'Barbe de quelques jours' },
   { value: 'barbe', label: 'Barbe' },
   { value: 'moustache', label: 'Moustache' },
-  { value: 'lunettes', label: 'Lunettes' },
-  { value: 'tatouages', label: 'Tatouages' },
-  { value: 'piercings', label: 'Piercings' },
-  { value: 'taches_rousseur', label: 'Taches de rousseur' },
-  { value: 'fossettes', label: 'Fossettes' },
+  { value: 'poilu', label: { m: 'Poilu', f: 'Poilue', x: 'Poilu·e' } },
 ];
 
 const HEIGHTS: QuestionOption[] = [
@@ -149,29 +156,20 @@ export const QUESTIONS: readonly Question[] = [
   { key: 'hairColor', section: 'me', title: 'Tes cheveux, côté couleur', short: 'Cheveux', options: HAIR_COLORS, multi: false, required: true },
   { key: 'hairLength', section: 'me', title: 'Et côté longueur', short: 'Longueur', options: HAIR_LENGTHS, multi: false, required: true },
   { key: 'eyes', section: 'me', title: 'Tes yeux', short: 'Yeux', options: EYES, multi: false, required: true },
-  { key: 'style', section: 'me', title: 'Ton style', short: 'Style', options: STYLES, multi: false, required: true },
-  {
-    key: 'features',
-    section: 'me',
-    title: 'Un signe distinctif ?',
-    short: 'Signes',
-    hint: 'Facultatif, plusieurs réponses possibles.',
-    options: FEATURES,
-    multi: true,
-    required: false,
-  },
+  // Plusieurs styles possibles, sans l'écrire : on coche ce qui nous ressemble.
+  { key: 'style', section: 'me', title: 'Ton style', short: 'Style', options: STYLES, multi: true, quietMulti: true, required: true },
+  { key: 'pilosity', section: 'me', title: 'Ta pilosité', short: 'Pilosité', options: PILOSITY, multi: false, required: false, notFor: 'f' },
   { key: 'seekHeights', section: 'seek', title: 'Sa taille', short: 'Taille', hint: 'Plusieurs réponses possibles.', options: HEIGHTS, multi: true, required: false, anyLabel: ANY },
   { key: 'seekSilhouettes', section: 'seek', title: 'Sa silhouette', short: 'Silhouette', hint: 'Plusieurs réponses possibles.', options: SILHOUETTES, multi: true, required: false, anyLabel: ANY },
   { key: 'seekHairColors', section: 'seek', title: 'Ses cheveux', short: 'Cheveux', hint: 'Plusieurs réponses possibles.', options: HAIR_COLORS, multi: true, required: false, anyLabel: ANY },
   { key: 'seekEyes', section: 'seek', title: 'Ses yeux', short: 'Yeux', hint: 'Plusieurs réponses possibles.', options: EYES, multi: true, required: false, anyLabel: ANY },
   { key: 'seekStyles', section: 'seek', title: 'Son style', short: 'Style', hint: 'Plusieurs réponses possibles.', options: STYLES, multi: true, required: false, anyLabel: ANY },
-  { key: 'values', section: 'values', title: 'Tes valeurs', short: 'Ses valeurs', hint: `De 1 à ${MAX_VALUES} réponses.`, options: VALUES, multi: true, max: MAX_VALUES, required: true },
+  { key: 'values', section: 'values', title: 'Tes valeurs', short: 'Valeurs', hint: `De 1 à ${MAX_VALUES} réponses.`, options: VALUES, multi: true, max: MAX_VALUES, required: true },
   {
     key: 'seekValues',
     section: 'values',
     title: 'Les valeurs que tu recherches',
     short: 'Recherche',
-    hint: `Jusqu’à ${MAX_VALUES} réponses.`,
     options: VALUES,
     multi: true,
     max: MAX_VALUES,
@@ -193,7 +191,12 @@ export const CARD_SECTION_LABELS: Record<QuestionSection, string> = {
   values: 'Valeurs',
 };
 
-export function genderKind(gender: string | null | undefined): 'm' | 'f' | 'x' {
+/** Questions posées à une personne de ce genre (pas de pilosité pour les femmes). */
+export function questionsFor(kind: GenderKind): readonly Question[] {
+  return QUESTIONS.filter((question) => question.notFor !== kind);
+}
+
+export function genderKind(gender: string | null | undefined): GenderKind {
   const g = gender?.trim().toLowerCase();
   if (g === 'une femme') return 'f';
   if (g === 'un homme') return 'm';
@@ -242,8 +245,11 @@ export function isQuestionnaireComplete(q: Questionnaire | null | undefined): bo
  */
 export function completeQuestionnaire(q: Questionnaire | null | undefined): Questionnaire {
   const out: Questionnaire = { ...(q ?? {}) };
+  // Retirés : signes distinctifs (remplacés par la pilosité).
+  delete (out as Record<string, unknown>).features;
   for (const question of QUESTIONS) {
-    if (question.multi && !Array.isArray(out[question.key])) (out[question.key] as string[]) = [];
+    // Une chaîne (style d'avant le choix multiple) devient une liste.
+    if (question.multi) (out[question.key] as string[]) = answersOf(out, question.key);
   }
   return out;
 }

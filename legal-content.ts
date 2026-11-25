@@ -83,6 +83,7 @@ Nous collectons uniquement les données nécessaires au service :
  • Identité : prénom, nom (optionnel), date de naissance, genre, ville.
  • Contact : numéro de téléphone OU adresse mail (un seul au choix lors de l'inscription).
  • Profil : photos, message audio, biographie, taille, badges, préférences et questionnaire (ton physique, tes valeurs, le physique et les valeurs que tu recherches). Ton questionnaire s’affiche sur ta carte de profil et compte dans le taux de compatibilité.
+ • Infos de profil facultatives : secteur d'activité, métier ou études, origine ethnique et spiritualité. Chaque question propose « Ne préfère pas le dire ». L'origine et la spiritualité sont des données sensibles : si tu les renseignes, elles s'affichent sur ta carte de profil. Ces infos ne comptent pas dans le taux de compatibilité.
  • Vérification du visage : analyse de ta photo de profil par nos serveurs (un seul visage) et, si tu le souhaites, selfie de vérification comparé à cette photo par nos serveurs. Le selfie n’est jamais publié et il est effacé juste après l’analyse.
  • Activité : matchs, messages, achats, badges.
  • Technique : token push, identifiant d'appareil, logs anonymes (adresse IP tronquée pour 30 jours).
@@ -93,6 +94,7 @@ Nous collectons uniquement les données nécessaires au service :
  • Notifications push : consentement (art. 6.1.a) — révocable à tout moment dans les réglages de l'OS.
  • Sécurité, anti-fraude, modération : intérêt légitime (art. 6.1.f).
  • Vérification du visage par selfie (facultative, lutte contre les faux profils) : ton consentement explicite (art. 9.2.a RGPD), donné en prenant le selfie.
+ • Origine et spiritualité (facultatives, affichées sur ta carte) : ton consentement explicite (art. 9.2.a RGPD), donné en choisissant une réponse autre que « Ne préfère pas le dire ». Tu peux le retirer à tout moment depuis Profil › Mes infos : la donnée est alors effacée.
  • Statistiques anonymes : intérêt légitime, sans identification individuelle.
  • Marketing (newsletters) : consentement explicite, case à cocher à l'inscription.
 
