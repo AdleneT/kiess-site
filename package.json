@@ -4,6 +4,9 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Site vitrine Kiess + inscription (même compte que l’app)",
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && node scripts/vercel-json.mjs --check && vite build",

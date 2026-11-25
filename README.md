@@ -38,7 +38,7 @@ npm run build      # typecheck + build → dist/
 npm run preview    # sert dist/ avec les mêmes en-têtes de sécurité qu’en production
 ```
 
-Node 20+ (testé avec Node 24). Pour tester avec une vraie API en local : lancer `api/`
+Node 22.18+ (testé avec Node 24) : `scripts/vercel-json.mjs` lit `htaccess.ts` sans compilation. Pour tester avec une vraie API en local : lancer `api/`
 (`NODE_ENV=development`, `CORS_ORIGINS=http://localhost:5173`) et mettre
 `VITE_API_URL=http://localhost:3000`. En développement, un fournisseur sans identifiant
 passe par les jetons de test de l’API (`dev_token_…`), et le code SMS s’affiche sous le champ.
