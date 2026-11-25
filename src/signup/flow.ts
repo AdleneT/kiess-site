@@ -7,14 +7,17 @@
  *     → Apple / Google / Facebook / Discord      → e-mail
  *     → numéro → code SMS                         → e-mail
  *   e-mail → prénom → nom → pseudo → genre → date de naissance
- *   → secteur d'activité → métier ou études → origines → origines recherchées
- *   → spiritualité → ville → mot de passe → photo
- *   → POST /auth/complete-signup → « Bravo ! »
+ *   → questionnaire (13 questions, une à la fois) → secteur d'activité
+ *   → métier ou études → origines → spiritualité → ville → mot de passe
+ *   → photo → POST /auth/complete-signup → « Bravo ! »
  *
  * Secteur « Ne préfère pas le dire » : l'étape du métier est sautée, comme
- * dans l'app. Les infos de la carte suivent mobile/profileOptions.ts (copie
- * dans ./profile-options.ts).
+ * dans l'app. Le recto de la carte suit mobile/profileOptions.ts (copie dans
+ * ./profile-options.ts).
  *
+ * Questionnaire : celui de l'app (copie dans ./questionnaire.ts) ; il
+ * remplace les badges « Critères physiques » et il est obligatoire avant le
+ * premier matchmaking.
  * Un compte déjà complet (connexion sociale ou numéro déjà inscrits) affiche
  * « Déjà inscrit·e » au lieu de reprendre l'inscription.
  */
@@ -23,14 +26,23 @@ import { api, ApiError, DEMO, hasSession, type Profile } from './api';
 import { devToken, isAvailable, PROVIDER_LABELS, redirectUri, startOAuth, usesDevToken, type OAuthReturn } from './oauth';
 import { MAX_INPUT_BYTES, toSquareJpeg } from './photo';
 import {
-  ANY_ORIGIN,
+  answersOf,
+  completeQuestionnaire,
+  genderKind,
+  isAnswered,
+  optionLabel,
+  questionsFor,
+  SECTION_LABELS,
+  toggleAnswer,
+  type Questionnaire,
+} from './questionnaire';
+import {
   isOrigin,
   isSector,
   isSpirituality,
-  optionLabel,
+  optionLabel as profileOptionLabel,
   ORIGIN_OPTIONS,
   SECTOR_OPTIONS,
-  SOUGHT_ORIGIN_OPTIONS,
   SPIRITUALITY_OPTIONS,
   toggleChoice,
   UNDISCLOSED,
@@ -64,10 +76,10 @@ type Step =
   | 'username'
   | 'gender'
   | 'birthDate'
+  | 'questionnaire'
   | 'sector'
   | 'occupation'
   | 'origins'
-  | 'originsSought'
   | 'spirituality'
   | 'city'
   | 'password'
@@ -83,10 +95,10 @@ const PROFILE_STEPS: Step[] = [
   'username',
   'gender',
   'birthDate',
+  'questionnaire',
   'sector',
   'occupation',
   'origins',
-  'originsSought',
   'spirituality',
   'city',
   'password',
@@ -94,11 +106,10 @@ const PROFILE_STEPS: Step[] = [
 ];
 
 /** Étapes à pastilles (infos de la carte) : choix unique ou multiple, valeurs exclusives. */
-type ChipStep = 'sector' | 'origins' | 'originsSought' | 'spirituality';
+type ChipStep = 'sector' | 'origins' | 'spirituality';
 const CHIPS: Record<ChipStep, { options: readonly ProfileOption[]; multi: boolean; exclusive: readonly string[] }> = {
   sector: { options: SECTOR_OPTIONS, multi: false, exclusive: [] },
   origins: { options: ORIGIN_OPTIONS, multi: true, exclusive: [UNDISCLOSED] },
-  originsSought: { options: SOUGHT_ORIGIN_OPTIONS, multi: true, exclusive: [ANY_ORIGIN] },
   spirituality: { options: SPIRITUALITY_OPTIONS, multi: false, exclusive: [] },
 };
 const PATHS: Record<'phone' | 'social', Step[]> = {
@@ -122,10 +133,11 @@ const MSG = {
   gender: 'Tu dois choisir ton genre, tu pourras le modifier plus tard',
   birthDateFormat: 'Entre une date valide au format JJ/MM/AAAA',
   tooYoung: 'Tu es trop jeune pour utiliser Kiess',
+  questionSingle: 'Choisis une réponse pour continuer',
+  questionMulti: 'Choisis au moins une réponse pour continuer',
   sector: 'Choisis un secteur, ou « Ne préfère pas le dire »',
   occupation: 'Écris ton métier ou tes études, ou coche « Ne préfère pas le dire »',
   origins: 'Choisis au moins une réponse, ou « Ne préfère pas le dire »',
-  originsSought: 'Choisis au moins une réponse, ou « Peu importe »',
   spirituality: 'Choisis une réponse, ou « Ne préfère pas le dire »',
   city: 'Entre le nom de ta ville',
   passwordEmpty: 'Entre et confirme ton mot de passe',
@@ -179,6 +191,11 @@ export function initSignup(hooks: Hooks = {}) {
   let normalizedPhone = '';
   let photo: { fileUrl: string; preview: string } | null = null;
   let busy = false;
+  // Questionnaire : réponses et question affichée (une à la fois).
+  let questionnaire: Questionnaire = {};
+  let qIndex = 0;
+  /** Questions posées selon le genre choisi (pas de pilosité pour les femmes). */
+  const questions = () => questionsFor(genderKind(form.querySelector<HTMLInputElement>('input[name=gender]:checked')?.value));
 
   // Fournisseurs non configurés : boutons masqués (sauf en développement).
   methodButtons.forEach((b) => {
@@ -224,6 +241,8 @@ export function initSignup(hooks: Hooks = {}) {
     steps.forEach((s) => s.classList.remove('has-error'));
     clearPhoto();
     updatePwRules();
+    questionnaire = {};
+    qIndex = 0;
     relabelChips();
     method = null;
     normalizedPhone = '';
@@ -242,6 +261,7 @@ export function initSignup(hooks: Hooks = {}) {
     const order = [...path(), ...DONE];
     const index = order.indexOf(step);
     current = step;
+    if (step === 'questionnaire') renderQuestion();
     steps.forEach((el, key) => {
       const active = key === step;
       el.classList.toggle('is-active', active);
@@ -256,6 +276,7 @@ export function initSignup(hooks: Hooks = {}) {
     actions.hidden = step === 'welcome' || done;
     nextLabel.textContent = step === 'photo' ? 'Créer mon compte' : 'Continuer';
     if (!done) live.textContent = step === 'welcome' ? 'Inscription à Kiess' : `Étape ${p.indexOf(step)} sur ${p.length - 1}`;
+    if (step === 'questionnaire') live.textContent += `, question ${qIndex + 1} sur ${questions().length}`;
     if (focus) {
       window.setTimeout(() => {
         const el = steps.get(step)!;
@@ -274,6 +295,13 @@ export function initSignup(hooks: Hooks = {}) {
   back.addEventListener('click', () => {
     if (busy) return;
     if (current === 'phoneCode') input('otp').value = '';
+    // Questionnaire : question précédente, puis l'étape d'avant.
+    if (current === 'questionnaire' && qIndex > 0) {
+      setError('questionnaire', '');
+      qIndex -= 1;
+      renderQuestion('back');
+      return;
+    }
     go(-1);
   });
 
@@ -425,13 +453,12 @@ export function initSignup(hooks: Hooks = {}) {
       const radio = form.querySelector<HTMLInputElement>(`input[name=gender][value="${CSS.escape(profile.gender)}"]`);
       if (radio) radio.checked = true;
     }
+    if (profile.questionnaire && Object.keys(questionnaire).length === 0) questionnaire = { ...profile.questionnaire };
     // Infos de la carte déjà connues (inscription reprise)
     if (isSector(profile.sector) && !selectedSector()) setChecked('sector', [profile.sector!]);
     fill('occupation', profile.occupation ?? undefined);
     const origins = (profile.origins ?? []).filter(isOrigin);
     if (origins.length > 0 && checkedValues('origins').length === 0) setChecked('origins', origins);
-    const sought = (profile.originsSought ?? []).filter(isOrigin);
-    if (sought.length > 0) setChecked('originsSought', sought);
     if (isSpirituality(profile.spirituality) && checkedValues('spirituality').length === 0) setChecked('spirituality', [profile.spirituality!]);
     relabelChips();
   }
@@ -446,6 +473,7 @@ export function initSignup(hooks: Hooks = {}) {
     if (current === 'phone') void run(sendCode, 'Envoi…');
     else if (current === 'phoneCode') void run(checkCode, 'Vérification…');
     else if (current === 'photo') void run(complete, 'Création…');
+    else if (current === 'questionnaire' && qIndex < questions().length - 1) nextQuestion();
     else go(1);
   });
 
@@ -471,14 +499,17 @@ export function initSignup(hooks: Hooks = {}) {
         if (!iso || ageFromIso(iso) > 110) return MSG.birthDateFormat;
         return ageFromIso(iso) >= ADULT_AGE ? '' : MSG.tooYoung;
       }
+      case 'questionnaire': {
+        const question = questions()[qIndex];
+        if (isAnswered(question, questionnaire)) return '';
+        return question.multi ? MSG.questionMulti : MSG.questionSingle;
+      }
       case 'sector':
         return isSector(selectedSector()) ? '' : MSG.sector;
       case 'occupation':
         return input('occupationUndisclosed').checked || occupationText() ? '' : MSG.occupation;
       case 'origins':
         return checkedValues('origins').length > 0 ? '' : MSG.origins;
-      case 'originsSought':
-        return checkedValues('originsSought').length > 0 ? '' : MSG.originsSought;
       case 'spirituality':
         return checkedValues('spirituality').length > 0 ? '' : MSG.spirituality;
       case 'city':
@@ -517,8 +548,6 @@ export function initSignup(hooks: Hooks = {}) {
         el.type = multi ? 'checkbox' : 'radio';
         el.name = name;
         el.value = option.value;
-        // « Peu importe » coché par défaut (form.reset() y revient)
-        el.defaultChecked = option.value === ANY_ORIGIN;
         const span = document.createElement('span');
         chipLabels.push({ option, span });
         label.append(el, span);
@@ -541,7 +570,7 @@ export function initSignup(hooks: Hooks = {}) {
 
   function relabelChips() {
     const gender = form.querySelector<HTMLInputElement>('input[name=gender]:checked')?.value;
-    chipLabels.forEach(({ option, span }) => (span.textContent = optionLabel(option, gender)));
+    chipLabels.forEach(({ option, span }) => (span.textContent = profileOptionLabel(option, gender)));
   }
 
   function checkedValues(name: string): string[] {
@@ -689,13 +718,13 @@ export function initSignup(hooks: Hooks = {}) {
         // Case « Ne préfère pas le dire » ou secteur non dit : pas de métier sur la carte.
         occupation: input('occupationUndisclosed').checked || sector === UNDISCLOSED ? undefined : occupationText() || undefined,
         origins: origins.length > 0 ? origins : undefined,
-        // « Peu importe » = aucune préférence (liste vide pour l'API)
-        originsSought: checkedValues('originsSought').filter((o) => o !== ANY_ORIGIN),
         spirituality: checkedValues('spirituality')[0] || undefined,
         marketingOptIn: input('marketingOptIn').checked,
         acceptedTerms: true,
         acceptedPrivacy: true,
         photoUrl: DEMO ? undefined : photo.fileUrl,
+        // Ce qui est recherché part toujours : liste vide = « Peu importe ».
+        questionnaire: completeQuestionnaire(questionnaire),
       });
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) {
@@ -727,6 +756,91 @@ export function initSignup(hooks: Hooks = {}) {
     show('success');
     rainHearts();
     hooks.onSuccess?.();
+  }
+
+  // ── Questionnaire : une question à la fois ─────────────────────────────
+  const qList = document.getElementById('suQList') as HTMLElement;
+  const qTitle = document.getElementById('suQTitle') as HTMLElement;
+  const qHint = document.getElementById('suQHint') as HTMLElement;
+  const qSection = document.getElementById('suQSection') as HTMLElement;
+  const qCount = document.getElementById('suQCount') as HTMLElement;
+  const qBar = document.getElementById('suQBar') as HTMLElement;
+  const ANY_VALUE = '__any__';
+
+  function nextQuestion() {
+    setError('questionnaire', '');
+    qIndex += 1;
+    renderQuestion('forward');
+    live.textContent = `Question ${qIndex + 1} sur ${questions().length}`;
+    window.setTimeout(() => qList.querySelector<HTMLInputElement>('input')?.focus({ preventScroll: true }), 120);
+  }
+
+  /** Affiche la question courante : intitulé, aide, réponses (accordées au genre choisi). */
+  function renderQuestion(direction?: 'forward' | 'back') {
+    // Genre changé entre-temps (femme : une question de moins) : on reste dans la liste.
+    qIndex = Math.min(qIndex, questions().length - 1);
+    const question = questions()[qIndex];
+    const gender = form.querySelector<HTMLInputElement>('input[name=gender]:checked')?.value;
+    const kind = question.section === 'me' || question.key === 'values' ? genderKind(gender) : 'x';
+    qSection.textContent = SECTION_LABELS[question.section];
+    qCount.textContent = `${qIndex + 1}/${questions().length}`;
+    qBar.style.setProperty('--q', String((qIndex + 1) / questions().length));
+    qTitle.textContent = question.title;
+    qHint.textContent = question.hint ?? '';
+    qHint.hidden = !question.hint;
+    qList.setAttribute('role', question.multi ? 'group' : 'radiogroup');
+    const options = [...(question.anyLabel ? [{ value: ANY_VALUE, label: question.anyLabel }] : []), ...question.options];
+    qList.classList.toggle('is-long', options.length > 8);
+    const chosen = answersOf(questionnaire, question.key);
+    qList.replaceChildren(
+      ...options.map((option) => {
+        const row = document.createElement('label');
+        const any = option.value === ANY_VALUE;
+        const multi = question.multi && !any;
+        // Style : plusieurs réponses possibles sans le montrer (ronds, pas de cases).
+        row.className = multi && !question.quietMulti ? 'q-row is-multi' : 'q-row';
+        const el = document.createElement('input');
+        el.type = multi ? 'checkbox' : 'radio';
+        el.name = `q-${question.key}`;
+        el.value = option.value;
+        // « Peu importe » coché tant que rien n'est choisi, comme dans l'app.
+        el.checked = any ? chosen.length === 0 : chosen.includes(option.value);
+        const mark = document.createElement('span');
+        mark.className = 'q-mark';
+        mark.setAttribute('aria-hidden', 'true');
+        const text = document.createElement('span');
+        text.textContent = any ? (option.label as string) : optionLabel(option, kind);
+        row.append(el, mark, text);
+        el.addEventListener('change', () => onAnswer(option.value));
+        return row;
+      }),
+    );
+    if (direction) {
+      qList.classList.remove('q-swap', 'is-back');
+      void qList.offsetWidth;
+      qList.classList.add('q-swap');
+      qList.classList.toggle('is-back', direction === 'back');
+    }
+  }
+
+  function onAnswer(value: string) {
+    const question = questions()[qIndex];
+    questionnaire = value === ANY_VALUE ? { ...questionnaire, [question.key]: [] } : toggleAnswer(questionnaire, question, value);
+    setError('questionnaire', '');
+    // Réponses cochées = état réel (plafond de 3 valeurs, « Peu importe » exclusif).
+    const chosen = answersOf(questionnaire, question.key);
+    qList.querySelectorAll<HTMLInputElement>('input').forEach((el) => {
+      el.checked = el.value === ANY_VALUE ? chosen.length === 0 : chosen.includes(el.value);
+    });
+    // Choix unique : on passe à la question suivante, comme pour le genre.
+    if (!question.multi) {
+      const at = qIndex;
+      window.setTimeout(() => {
+        if (current !== 'questionnaire' || qIndex !== at) return;
+        if (qIndex < questions().length - 1) nextQuestion();
+        else go(1);
+      }, 260);
+    }
   }
 
   // ── Détails de saisie ──────────────────────────────────────────────────

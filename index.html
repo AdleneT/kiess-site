@@ -609,11 +609,23 @@
             <p class="bd-error" data-error></p>
           </fieldset>
 
-          <!-- Infos de la carte de profil, comme dans l'app : pastilles créées par src/signup/flow.ts -->
+          <!-- Questionnaire, comme dans l'app : une question à la fois, réponses créées par src/signup/flow.ts -->
+          <fieldset class="bd-step" data-step="questionnaire">
+            <legend class="bd-title q-legend">
+              <small class="q-head"><b id="suQSection">Toi</b><b id="suQCount">1/13</b></small>
+              <span class="q-track" aria-hidden="true"><i id="suQBar"></i></span>
+              <span id="suQTitle">Ta silhouette</span>
+            </legend>
+            <p class="bd-hint" id="suQHint" hidden></p>
+            <div class="q-list" id="suQList" role="radiogroup" aria-labelledby="suQTitle"></div>
+            <p class="bd-error" data-error></p>
+          </fieldset>
+
+          <!-- Recto de la carte de profil, comme dans l'app : pastilles créées par src/signup/flow.ts -->
           <!-- Secteur d'activité -->
           <fieldset class="bd-step" data-step="sector">
             <legend class="bd-title"><span>Ton secteur</span> d’activité</legend>
-            <p class="bd-hint">Il s’affiche sur ta carte de profil. Le même secteur rapproche dans le taux de compatibilité.</p>
+            <p class="bd-hint">Il s’affiche sur ta carte de profil si tu ne précises pas ton métier.</p>
             <div class="choices choices-wrap" role="radiogroup" aria-label="Ton secteur d’activité" data-chips="sector"></div>
             <p class="bd-error" data-error></p>
           </fieldset>
@@ -637,23 +649,15 @@
           <!-- Origines -->
           <fieldset class="bd-step" data-step="origins">
             <legend class="bd-title"><span>Tes</span> origines</legend>
-            <p class="bd-hint">Facultatif, plusieurs choix possibles. Ta réponse s’affiche sur ta carte et compte dans le taux de compatibilité. Tu peux la changer ou la retirer à tout moment depuis ton profil.</p>
+            <p class="bd-hint">Facultatif, plusieurs choix possibles. Ta réponse s’affiche sur ta carte. Tu peux la changer ou la retirer à tout moment depuis ton profil.</p>
             <div class="choices choices-wrap" role="group" aria-label="Tes origines" data-chips="origins"></div>
-            <p class="bd-error" data-error></p>
-          </fieldset>
-
-          <!-- Origines recherchées (privé) -->
-          <fieldset class="bd-step" data-step="originsSought">
-            <legend class="bd-title"><span>Les origines</span> que tu recherches</legend>
-            <p class="bd-hint">Privé&nbsp;: personne ne voit ta réponse. Elle fait seulement monter, pour toi, le taux de compatibilité des profils qui y correspondent. Modifiable dans l’app, Réglages › Découverte.</p>
-            <div class="choices choices-wrap" role="group" aria-label="Les origines que tu recherches" data-chips="originsSought"></div>
             <p class="bd-error" data-error></p>
           </fieldset>
 
           <!-- Spiritualité -->
           <fieldset class="bd-step" data-step="spirituality">
             <legend class="bd-title"><span>Ta</span> spiritualité</legend>
-            <p class="bd-hint">Facultatif. Ta réponse s’affiche sur ta carte et compte dans le taux de compatibilité. Tu peux la changer ou la retirer à tout moment depuis ton profil.</p>
+            <p class="bd-hint">Facultatif. Ta réponse s’affiche sur ta carte. Tu peux la changer ou la retirer à tout moment depuis ton profil.</p>
             <div class="choices choices-wrap" role="radiogroup" aria-label="Ta spiritualité" data-chips="spirituality"></div>
             <p class="bd-error" data-error></p>
           </fieldset>

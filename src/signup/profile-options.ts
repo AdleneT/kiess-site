@@ -1,6 +1,6 @@
 /**
- * Infos de la carte de profil demandées à l'inscription : secteur d'activité,
- * métier ou études, origines, origines recherchées et spiritualité.
+ * Infos du recto de la carte de profil demandées à l'inscription : secteur
+ * d'activité, métier ou études, origines et spiritualité (hors score).
  *
  * ⚠️ COPIE de mobile/profileOptions.ts (dépôt kiess-app/Kiess) : mêmes
  * identifiants que l'API (api/src/domain/profile-options.ts), mêmes libellés,
@@ -57,13 +57,6 @@ export const ORIGIN_OPTIONS: readonly ProfileOption[] = [
   { value: UNDISCLOSED, label: UNDISCLOSED_LABEL },
 ];
 
-/** Origines recherchées : « Peu importe » (liste vide pour l'API) ou une sélection. */
-export const ANY_ORIGIN = 'peu_importe';
-export const SOUGHT_ORIGIN_OPTIONS: readonly ProfileOption[] = [
-  { value: ANY_ORIGIN, label: 'Peu importe' },
-  ...ORIGIN_OPTIONS.filter((o) => o.value !== UNDISCLOSED),
-];
-
 /** Spiritualité (un seul choix). */
 export const SPIRITUALITY_OPTIONS: readonly ProfileOption[] = [
   { value: 'agnostique', label: 'Agnostique' },
@@ -97,8 +90,8 @@ export const isOrigin = (v?: string | null) => has(ORIGIN_OPTIONS, v);
 export const isSpirituality = (v?: string | null) => has(SPIRITUALITY_OPTIONS, v);
 
 /**
- * Sélection multiple avec valeurs exclusives (« Ne préfère pas le dire »,
- * « Peu importe ») : en choisir une la laisse seule, choisir une autre valeur
+ * Sélection multiple avec valeurs exclusives (« Ne préfère pas le dire ») :
+ * en choisir une la laisse seule, choisir une autre valeur
  * retire les exclusives. Toucher une valeur choisie la retire.
  */
 export function toggleChoice(current: readonly string[], value: string, exclusive: readonly string[]): string[] {
