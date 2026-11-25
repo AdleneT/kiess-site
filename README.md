@@ -38,7 +38,7 @@ npm run build      # typecheck + build → dist/
 npm run preview    # sert dist/ avec les mêmes en-têtes de sécurité qu’en production
 ```
 
-Node 20+ (testé avec Node 24). Pour tester avec une vraie API en local : lancer `api/`
+Node 22.18+ (testé avec Node 24) : `scripts/vercel-json.mjs` lit `htaccess.ts` sans compilation. Pour tester avec une vraie API en local : lancer `api/`
 (`NODE_ENV=development`, `CORS_ORIGINS=http://localhost:5173`) et mettre
 `VITE_API_URL=http://localhost:3000`. En développement, un fournisseur sans identifiant
 passe par les jetons de test de l’API (`dev_token_…`), et le code SMS s’affiche sous le champ.
@@ -46,6 +46,8 @@ passe par les jetons de test de l’API (`dev_token_…`), et le code SMS s’af
 ## Variables d’environnement
 
 Copier `.env.example` en `.env`. Les variables `VITE_*` sont injectées **au build**.
+Les adresses de production (publiques : elles finissent dans le code du site) sont versionnées
+dans `.env.production`, lu par tout `npm run build` ; un `.env.production.local` les remplace.
 
 | Clé | Rôle |
 | --- | --- |
@@ -78,13 +80,22 @@ dans l’app ouvre le même compte, même si l’adresse saisie à l’inscripti
 
 ## Mise en ligne
 
+kiess.fr est servi par **Vercel**. Les en-têtes de sécurité (CSP, HSTS…) ont une seule source,
+`htaccess.ts`, qui produit `.htaccess` (Hostinger) et `vercel.json` (Vercel).
+
 1. **API** — l’API Kiess doit être en ligne (`render.yaml`), avec `CORS_ORIGINS` contenant
-   `https://kiess.fr` et les réglages des fournisseurs ci-dessus.
-2. **Build** — renseigner `.env` (au minimum `VITE_API_URL`), puis `npm run build`.
-3. **Hostinger** — envoyer le **contenu** de `dist/` dans `public_html` (avec le fichier caché
-   `.htaccess`, généré par le build depuis `htaccess.ts`). Ni base de données ni PHP : le site est
-   entièrement statique.
-4. **SSL** — hPanel → Sécurité → SSL : certificat actif. Le `.htaccess` force déjà le HTTPS.
+   `https://kiess.fr` et les réglages des fournisseurs ci-dessus. Le stockage des photos (R2)
+   doit autoriser `PUT` depuis `https://kiess.fr` (règles CORS du bucket) : le navigateur y envoie
+   la photo directement.
+2. **Build** — `npm run build` (adresses de `.env.production`). Il prévient si `vercel.json` n’est
+   plus aligné sur `htaccess.ts` ou sur les adresses : lancer alors `npm run vercel-json` et
+   commiter le fichier.
+3. **Vercel** — projet relié au dépôt : `vercel.json` (racine) donne la commande de build, le
+   dossier `dist/`, les en-têtes, le cache et la redirection www → kiess.fr. Déploiement du dossier
+   déjà construit : `dist/vercel.json` porte les mêmes en-têtes, sans réglages de build.
+4. **Hostinger** (autre hébergement possible) — envoyer le **contenu** de `dist/` dans
+   `public_html` (avec le fichier caché `.htaccess`). Ni base de données ni PHP : le site est
+   entièrement statique. SSL : hPanel → Sécurité → SSL ; le `.htaccess` force déjà le HTTPS.
 5. **Référencement** — déclarer `https://kiess.fr/sitemap.xml` dans Google Search Console.
 
 ## Pages légales
@@ -132,7 +143,10 @@ kiess-site/
 ├── confidentialite/        Politique de confidentialité (texte de l’app + section site)
 ├── mentions-legales/       Mentions légales
 ├── 404.html                Page introuvable
-├── htaccess.ts             .htaccess (Hostinger) et en-têtes de sécurité
+├── htaccess.ts             En-têtes de sécurité : .htaccess (Hostinger) et vercel.json (Vercel)
+├── vercel.json             Vercel (généré : npm run vercel-json)
+├── scripts/vercel-json.mjs Écrit / vérifie vercel.json
+├── .env.production         Adresses publiques de production (API, stockage des photos)
 ├── legal.ts                Pages légales (CGU, confidentialité) générées au build
 ├── legal-content.ts        Textes légaux de l’app (copie de Kiess api/src/legal)
 ├── public/
