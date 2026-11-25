@@ -16,9 +16,14 @@ pseudo + mot de passe).
 accueil : conditions + façon de s’inscrire
   ├─ Apple · Google · Facebook · Discord ─────────────┐
   └─ numéro de téléphone → code SMS ──────────────────┤
-e-mail → prénom → nom → pseudo → genre → date de naissance → ville → mot de passe → photo
+e-mail → prénom → nom → pseudo → genre → date de naissance
+→ questionnaire (13 questions, une à la fois) → ville → mot de passe → photo
 → POST /auth/complete-signup → « Bravo ! »            (compte déjà complet → « Déjà inscrit·e »)
 ```
+
+Le questionnaire (physique, ce que tu recherches, valeurs) remplace les badges « Critères physiques » de
+l’app : il demande une API qui le connaît (Kiess, migration `20261125090000_questionnaire_match_acceptance`).
+L’API refuse les champs inconnus, donc **déployer l’API avant le site**.
 
 ## Lancer
 
@@ -140,6 +145,7 @@ kiess-site/
     ├── signup/oauth.ts     Apple / Google / Facebook / Discord (redirection, state, nonce)
     ├── signup/photo.ts     Recadrage carré + JPEG
     ├── signup/validation.ts Règles identiques à l’app
+    ├── signup/questionnaire.ts Questionnaire du profil : copie de Kiess mobile/questionnaire.ts
     ├── logo.ts / badges.ts Tracés du logo (K? issu de « logo eps/EPS/Group.eps ») et pictogrammes de badges
     ├── config.ts           Lecture des variables VITE_*
     ├── legal.css           Styles des pages légales et 404

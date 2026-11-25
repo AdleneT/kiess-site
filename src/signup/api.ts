@@ -14,6 +14,7 @@
  * Sans VITE_API_URL : mode démo, rien ne quitte le navigateur.
  */
 import { CONFIG, type Provider } from '../config';
+import type { Questionnaire } from './questionnaire';
 
 export interface Tokens {
   accessToken: string;
@@ -29,6 +30,8 @@ export interface Profile {
   city?: string;
   photoUrl?: string;
   onboardingStage?: string;
+  /** Questionnaire déjà rempli (inscription reprise). */
+  questionnaire?: Questionnaire;
 }
 
 export interface CompleteSignupInput {
@@ -44,6 +47,8 @@ export interface CompleteSignupInput {
   acceptedTerms: boolean;
   acceptedPrivacy: boolean;
   photoUrl?: string;
+  /** Questionnaire (src/signup/questionnaire.ts) : liste vide = « Peu importe ». */
+  questionnaire?: Questionnaire;
 }
 
 /** status 0 = réseau / délai dépassé. */

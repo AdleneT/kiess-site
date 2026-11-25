@@ -6,9 +6,13 @@
  *   accueil (conditions + façon de s'inscrire)
  *     → Apple / Google / Facebook / Discord      → e-mail
  *     → numéro → code SMS                         → e-mail
- *   e-mail → prénom → nom → pseudo → genre → date de naissance → ville
- *   → mot de passe → photo → POST /auth/complete-signup → « Bravo ! »
+ *   e-mail → prénom → nom → pseudo → genre → date de naissance
+ *   → questionnaire (13 questions, une à la fois) → ville → mot de passe
+ *   → photo → POST /auth/complete-signup → « Bravo ! »
  *
+ * Questionnaire : celui de l'app (copie dans ./questionnaire.ts) ; il
+ * remplace les badges « Critères physiques » et il est obligatoire avant le
+ * premier matchmaking.
  * Un compte déjà complet (connexion sociale ou numéro déjà inscrits) affiche
  * « Déjà inscrit·e » au lieu de reprendre l'inscription.
  */
@@ -16,6 +20,17 @@ import type { Provider } from '../config';
 import { api, ApiError, DEMO, hasSession, type Profile } from './api';
 import { devToken, isAvailable, PROVIDER_LABELS, redirectUri, startOAuth, usesDevToken, type OAuthReturn } from './oauth';
 import { MAX_INPUT_BYTES, toSquareJpeg } from './photo';
+import {
+  answersOf,
+  completeQuestionnaire,
+  genderKind,
+  isAnswered,
+  optionLabel,
+  QUESTIONS,
+  SECTION_LABELS,
+  toggleAnswer,
+  type Questionnaire,
+} from './questionnaire';
 import {
   ADULT_AGE,
   ageFromIso,
@@ -44,6 +59,7 @@ type Step =
   | 'username'
   | 'gender'
   | 'birthDate'
+  | 'questionnaire'
   | 'city'
   | 'password'
   | 'photo'
@@ -51,7 +67,7 @@ type Step =
   | 'existing';
 type Method = Provider | 'phone';
 
-const PROFILE_STEPS: Step[] = ['email', 'firstName', 'lastName', 'username', 'gender', 'birthDate', 'city', 'password', 'photo'];
+const PROFILE_STEPS: Step[] = ['email', 'firstName', 'lastName', 'username', 'gender', 'birthDate', 'questionnaire', 'city', 'password', 'photo'];
 const PATHS: Record<'phone' | 'social', Step[]> = {
   phone: ['welcome', 'phone', 'phoneCode', ...PROFILE_STEPS],
   social: ['welcome', ...PROFILE_STEPS],
@@ -73,6 +89,8 @@ const MSG = {
   gender: 'Tu dois choisir ton genre, tu pourras le modifier plus tard',
   birthDateFormat: 'Entre une date valide au format JJ/MM/AAAA',
   tooYoung: 'Tu es trop jeune pour utiliser Kiess',
+  questionSingle: 'Choisis une réponse pour continuer',
+  questionMulti: 'Choisis au moins une réponse pour continuer',
   city: 'Entre le nom de ta ville',
   passwordEmpty: 'Entre et confirme ton mot de passe',
   passwordRules: 'Ton mot de passe doit contenir au moins 8 caractères, des majuscules et des chiffres',
@@ -125,6 +143,9 @@ export function initSignup(hooks: Hooks = {}) {
   let normalizedPhone = '';
   let photo: { fileUrl: string; preview: string } | null = null;
   let busy = false;
+  // Questionnaire : réponses et question affichée (une à la fois).
+  let questionnaire: Questionnaire = {};
+  let qIndex = 0;
 
   // Fournisseurs non configurés : boutons masqués (sauf en développement).
   methodButtons.forEach((b) => {
@@ -170,6 +191,8 @@ export function initSignup(hooks: Hooks = {}) {
     steps.forEach((s) => s.classList.remove('has-error'));
     clearPhoto();
     updatePwRules();
+    questionnaire = {};
+    qIndex = 0;
     method = null;
     normalizedPhone = '';
     clearState();
@@ -183,6 +206,7 @@ export function initSignup(hooks: Hooks = {}) {
     const order = [...path(), ...DONE];
     const index = order.indexOf(step);
     current = step;
+    if (step === 'questionnaire') renderQuestion();
     steps.forEach((el, key) => {
       const active = key === step;
       el.classList.toggle('is-active', active);
@@ -197,6 +221,7 @@ export function initSignup(hooks: Hooks = {}) {
     actions.hidden = step === 'welcome' || done;
     nextLabel.textContent = step === 'photo' ? 'Créer mon compte' : 'Continuer';
     if (!done) live.textContent = step === 'welcome' ? 'Inscription à Kiess' : `Étape ${p.indexOf(step)} sur ${p.length - 1}`;
+    if (step === 'questionnaire') live.textContent += `, question ${qIndex + 1} sur ${QUESTIONS.length}`;
     if (focus) {
       window.setTimeout(() => {
         const el = steps.get(step)!;
@@ -215,6 +240,13 @@ export function initSignup(hooks: Hooks = {}) {
   back.addEventListener('click', () => {
     if (busy) return;
     if (current === 'phoneCode') input('otp').value = '';
+    // Questionnaire : question précédente, puis l'étape d'avant.
+    if (current === 'questionnaire' && qIndex > 0) {
+      setError('questionnaire', '');
+      qIndex -= 1;
+      renderQuestion('back');
+      return;
+    }
     go(-1);
   });
 
@@ -366,6 +398,7 @@ export function initSignup(hooks: Hooks = {}) {
       const radio = form.querySelector<HTMLInputElement>(`input[name=gender][value="${CSS.escape(profile.gender)}"]`);
       if (radio) radio.checked = true;
     }
+    if (profile.questionnaire && Object.keys(questionnaire).length === 0) questionnaire = { ...profile.questionnaire };
   }
 
   // ── Continuer ──────────────────────────────────────────────────────────
@@ -378,6 +411,7 @@ export function initSignup(hooks: Hooks = {}) {
     if (current === 'phone') void run(sendCode, 'Envoi…');
     else if (current === 'phoneCode') void run(checkCode, 'Vérification…');
     else if (current === 'photo') void run(complete, 'Création…');
+    else if (current === 'questionnaire' && qIndex < QUESTIONS.length - 1) nextQuestion();
     else go(1);
   });
 
@@ -402,6 +436,11 @@ export function initSignup(hooks: Hooks = {}) {
         const iso = parseBirthDate(value('birthDate'));
         if (!iso || ageFromIso(iso) > 110) return MSG.birthDateFormat;
         return ageFromIso(iso) >= ADULT_AGE ? '' : MSG.tooYoung;
+      }
+      case 'questionnaire': {
+        const question = QUESTIONS[qIndex];
+        if (isAnswered(question, questionnaire)) return '';
+        return question.multi ? MSG.questionMulti : MSG.questionSingle;
       }
       case 'city':
         return isValidCity(value('city')) ? '' : MSG.city;
@@ -541,6 +580,8 @@ export function initSignup(hooks: Hooks = {}) {
         acceptedTerms: true,
         acceptedPrivacy: true,
         photoUrl: DEMO ? undefined : photo.fileUrl,
+        // Ce qui est recherché part toujours : liste vide = « Peu importe ».
+        questionnaire: completeQuestionnaire(questionnaire),
       });
     } catch (e) {
       if (e instanceof ApiError && e.status === 409) {
@@ -566,6 +607,88 @@ export function initSignup(hooks: Hooks = {}) {
     show('success');
     rainHearts();
     hooks.onSuccess?.();
+  }
+
+  // ── Questionnaire : une question à la fois ─────────────────────────────
+  const qList = document.getElementById('suQList') as HTMLElement;
+  const qTitle = document.getElementById('suQTitle') as HTMLElement;
+  const qHint = document.getElementById('suQHint') as HTMLElement;
+  const qSection = document.getElementById('suQSection') as HTMLElement;
+  const qCount = document.getElementById('suQCount') as HTMLElement;
+  const qBar = document.getElementById('suQBar') as HTMLElement;
+  const ANY_VALUE = '__any__';
+
+  function nextQuestion() {
+    setError('questionnaire', '');
+    qIndex += 1;
+    renderQuestion('forward');
+    live.textContent = `Question ${qIndex + 1} sur ${QUESTIONS.length}`;
+    window.setTimeout(() => qList.querySelector<HTMLInputElement>('input')?.focus({ preventScroll: true }), 120);
+  }
+
+  /** Affiche la question courante : intitulé, aide, réponses (accordées au genre choisi). */
+  function renderQuestion(direction?: 'forward' | 'back') {
+    const question = QUESTIONS[qIndex];
+    const gender = form.querySelector<HTMLInputElement>('input[name=gender]:checked')?.value;
+    const kind = question.section === 'me' || question.key === 'values' ? genderKind(gender) : 'x';
+    qSection.textContent = SECTION_LABELS[question.section];
+    qCount.textContent = `${qIndex + 1}/${QUESTIONS.length}`;
+    qBar.style.setProperty('--q', String((qIndex + 1) / QUESTIONS.length));
+    qTitle.textContent = question.title;
+    qHint.textContent = question.hint ?? '';
+    qHint.hidden = !question.hint;
+    qList.setAttribute('role', question.multi ? 'group' : 'radiogroup');
+    const options = [...(question.anyLabel ? [{ value: ANY_VALUE, label: question.anyLabel }] : []), ...question.options];
+    qList.classList.toggle('is-long', options.length > 8);
+    const chosen = answersOf(questionnaire, question.key);
+    qList.replaceChildren(
+      ...options.map((option) => {
+        const row = document.createElement('label');
+        const any = option.value === ANY_VALUE;
+        const multi = question.multi && !any;
+        row.className = multi ? 'q-row is-multi' : 'q-row';
+        const el = document.createElement('input');
+        el.type = multi ? 'checkbox' : 'radio';
+        el.name = `q-${question.key}`;
+        el.value = option.value;
+        // « Peu importe » coché tant que rien n'est choisi, comme dans l'app.
+        el.checked = any ? chosen.length === 0 : chosen.includes(option.value);
+        const mark = document.createElement('span');
+        mark.className = 'q-mark';
+        mark.setAttribute('aria-hidden', 'true');
+        const text = document.createElement('span');
+        text.textContent = any ? (option.label as string) : optionLabel(option, kind);
+        row.append(el, mark, text);
+        el.addEventListener('change', () => onAnswer(option.value));
+        return row;
+      }),
+    );
+    if (direction) {
+      qList.classList.remove('q-swap', 'is-back');
+      void qList.offsetWidth;
+      qList.classList.add('q-swap');
+      qList.classList.toggle('is-back', direction === 'back');
+    }
+  }
+
+  function onAnswer(value: string) {
+    const question = QUESTIONS[qIndex];
+    questionnaire = value === ANY_VALUE ? { ...questionnaire, [question.key]: [] } : toggleAnswer(questionnaire, question, value);
+    setError('questionnaire', '');
+    // Réponses cochées = état réel (plafond de 3 valeurs, « Peu importe » exclusif).
+    const chosen = answersOf(questionnaire, question.key);
+    qList.querySelectorAll<HTMLInputElement>('input').forEach((el) => {
+      el.checked = el.value === ANY_VALUE ? chosen.length === 0 : chosen.includes(el.value);
+    });
+    // Choix unique : on passe à la question suivante, comme pour le genre.
+    if (!question.multi) {
+      const at = qIndex;
+      window.setTimeout(() => {
+        if (current !== 'questionnaire' || qIndex !== at) return;
+        if (qIndex < QUESTIONS.length - 1) nextQuestion();
+        else go(1);
+      }, 260);
+    }
   }
 
   // ── Détails de saisie ──────────────────────────────────────────────────

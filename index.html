@@ -609,6 +609,18 @@
             <p class="bd-error" data-error></p>
           </fieldset>
 
+          <!-- Questionnaire, comme dans l'app : une question à la fois, réponses créées par src/signup/flow.ts -->
+          <fieldset class="bd-step" data-step="questionnaire">
+            <legend class="bd-title q-legend">
+              <small class="q-head"><b id="suQSection">Toi</b><b id="suQCount">1/13</b></small>
+              <span class="q-track" aria-hidden="true"><i id="suQBar"></i></span>
+              <span id="suQTitle">Ta silhouette</span>
+            </legend>
+            <p class="bd-hint" id="suQHint" hidden></p>
+            <div class="q-list" id="suQList" role="radiogroup" aria-labelledby="suQTitle"></div>
+            <p class="bd-error" data-error></p>
+          </fieldset>
+
           <!-- Ville -->
           <fieldset class="bd-step" data-step="city">
             <legend class="bd-title">Tu vis à...</legend>

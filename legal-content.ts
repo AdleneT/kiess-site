@@ -16,7 +16,7 @@
  * LEGAL_* (voir legal.controller.ts).
  */
 
-export const LEGAL_LAST_UPDATE = '2026-11-24';
+export const LEGAL_LAST_UPDATE = '2026-11-25';
 
 export const CGU_TITLE = "Conditions générales d'utilisation";
 export const CGU_TEXT = `Dernière mise à jour : ${LEGAL_LAST_UPDATE}
@@ -82,7 +82,7 @@ DPO : {{DPO_EMAIL}}.
 Nous collectons uniquement les données nécessaires au service :
  • Identité : prénom, nom (optionnel), date de naissance, genre, ville.
  • Contact : numéro de téléphone OU adresse mail (un seul au choix lors de l'inscription).
- • Profil : photos, message audio, valeurs, préférences, biographie, taille.
+ • Profil : photos, message audio, biographie, taille, badges, préférences et questionnaire (ton physique, tes valeurs, le physique et les valeurs que tu recherches). Ton questionnaire s’affiche sur ta carte de profil et compte dans le taux de compatibilité.
  • Vérification du visage : analyse de ta photo de profil par nos serveurs (un seul visage) et, si tu le souhaites, selfie de vérification comparé à cette photo par nos serveurs. Le selfie n’est jamais publié et il est effacé juste après l’analyse.
  • Activité : matchs, messages, achats, badges.
  • Technique : token push, identifiant d'appareil, logs anonymes (adresse IP tronquée pour 30 jours).
