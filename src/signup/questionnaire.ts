@@ -47,6 +47,8 @@ export type Question = {
   title: string;
   /** Intitulé court sur la carte et dans le récapitulatif (« Silhouette »). */
   short: string;
+  /** Intitulé court sur son propre profil, quand il diffère (« Mes valeurs »). */
+  shortMine?: string;
   hint?: string;
   options: readonly QuestionOption[];
   multi: boolean;
@@ -164,7 +166,7 @@ export const QUESTIONS: readonly Question[] = [
   { key: 'seekHairColors', section: 'seek', title: 'Ses cheveux', short: 'Cheveux', hint: 'Plusieurs réponses possibles.', options: HAIR_COLORS, multi: true, required: false, anyLabel: ANY },
   { key: 'seekEyes', section: 'seek', title: 'Ses yeux', short: 'Yeux', hint: 'Plusieurs réponses possibles.', options: EYES, multi: true, required: false, anyLabel: ANY },
   { key: 'seekStyles', section: 'seek', title: 'Son style', short: 'Style', hint: 'Plusieurs réponses possibles.', options: STYLES, multi: true, required: false, anyLabel: ANY },
-  { key: 'values', section: 'values', title: 'Tes valeurs', short: 'Valeurs', hint: `De 1 à ${MAX_VALUES} réponses.`, options: VALUES, multi: true, max: MAX_VALUES, required: true },
+  { key: 'values', section: 'values', title: 'Tes valeurs', short: 'Ses valeurs', shortMine: 'Mes valeurs', hint: `De 1 à ${MAX_VALUES} réponses.`, options: VALUES, multi: true, max: MAX_VALUES, required: true },
   {
     key: 'seekValues',
     section: 'values',
