@@ -1,11 +1,26 @@
 /**
- * Configuration du serveur Hostinger (LiteSpeed / Apache) : `.htaccess` écrit
- * à la racine de dist/ au build (vite.config.ts), donc à la racine de
- * public_html. Les mêmes en-têtes de sécurité sont appliqués à `npm run preview`.
+ * Configuration des hébergeurs, une seule source pour les en-têtes :
+ *  - Hostinger (LiteSpeed / Apache) : `.htaccess` écrit à la racine de dist/
+ *    au build (vite.config.ts), donc à la racine de public_html ;
+ *  - Vercel (kiess.fr) : `vercel.json`, à la racine du dépôt (npm run
+ *    vercel-json) et dans dist/ (déploiement du dossier déjà construit).
+ * Les mêmes en-têtes de sécurité sont appliqués à `npm run preview`.
  *
  * `connect` : origines que la page peut appeler en plus d'elle-même, déduites
  * de VITE_API_URL (l'API Kiess) et de VITE_UPLOADS_ORIGIN (stockage des photos).
  */
+
+/** Origines autorisées (CSP connect-src) déduites du .env : l'API et le stockage des photos. */
+export function connectOrigins(env: Record<string, string | undefined>): string[] {
+  return [env.VITE_API_URL, env.VITE_UPLOADS_ORIGIN].flatMap((url) => {
+    if (!url?.trim()) return [];
+    try {
+      return [new URL(url.trim()).origin];
+    } catch {
+      throw new Error(`Adresse invalide dans .env : ${url}`);
+    }
+  });
+}
 
 export function contentSecurityPolicy(connect: string[]): string {
   return [
@@ -38,6 +53,45 @@ export function securityHeaders(connect: string[]): Record<string, string> {
     'Cross-Origin-Resource-Policy': 'same-origin',
     'X-Permitted-Cross-Domain-Policies': 'none',
   };
+}
+
+type VercelHeader = { key: string; value: string };
+
+/**
+ * vercel.json : en-têtes de sécurité (les mêmes que .htaccess, CSP avec
+ * upgrade-insecure-requests, HSTS), cache des fichiers versionnés et des
+ * médias, www.kiess.fr → kiess.fr. `build` : réglages de build pour un projet
+ * relié au dépôt (vercel.json de la racine) ; sans, pour le déploiement de
+ * dist/ déjà construit (vercel.json de dist/).
+ */
+export function vercelConfig(connect: string[], site: string, options: { build: boolean }) {
+  const security: VercelHeader[] = Object.entries(securityHeaders(connect)).map(([key, value]) => ({
+    key,
+    value: key === 'Content-Security-Policy' ? `${value}; upgrade-insecure-requests` : value,
+  }));
+  security.push({ key: 'Strict-Transport-Security', value: 'max-age=31536000' });
+  const host = new URL(site).host;
+  return {
+    $schema: 'https://openapi.vercel.sh/vercel.json',
+    ...(options.build ? { framework: 'vite', buildCommand: 'npm run build', outputDirectory: 'dist' } : {}),
+    headers: [
+      { source: '/(.*)', headers: security },
+      // Fichiers versionnés par Vite (nom avec empreinte) : cache long
+      { source: '/assets/(.*)', headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }] },
+      // Vidéos et images du site : 1 semaine
+      { source: '/media/(.*)', headers: [{ key: 'Cache-Control', value: 'public, max-age=604800' }] },
+    ],
+    // Une seule adresse pour les moteurs de recherche : www → domaine nu
+    redirects: [
+      { source: '/(.*)', has: [{ type: 'host', value: `www.${host}` }], destination: `https://${host}/$1`, permanent: true },
+    ],
+  };
+}
+
+/** Texte de vercel.json (JSON indenté, fin de ligne finale). */
+export function vercelJson(connect: string[], site: string, options: { build: boolean }): string {
+  return `${JSON.stringify(vercelConfig(connect, site, options), null, 2)}
+`;
 }
 
 export function htaccess(connect: string[]): string {

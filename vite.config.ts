@@ -1,5 +1,5 @@
 import { defineConfig, loadEnv, type Plugin } from 'vite';
-import { htaccess, securityHeaders } from './htaccess';
+import { connectOrigins, htaccess, securityHeaders, vercelJson } from './htaccess';
 import { injectLegal } from './legal';
 
 /** Pages publiées (et listées dans le sitemap, sauf 404). */
@@ -13,15 +13,6 @@ const PAGES = {
 const SITEMAP = ['/', '/cgu/', '/mentions-legales/', '/confidentialite/'];
 
 /** Origine (https://hôte[:port]) d'une adresse, ou rien si elle est vide ou invalide. */
-function origin(url: string | undefined): string[] {
-  if (!url?.trim()) return [];
-  try {
-    return [new URL(url.trim()).origin];
-  } catch {
-    throw new Error(`Adresse invalide dans .env : ${url}`);
-  }
-}
-
 const decode = (s: string) =>
   s
     .replace(/<[^>]+>/g, '')
@@ -77,6 +68,8 @@ function seo(site: string, connect: string[]): Plugin {
         source: `User-agent: *\nAllow: /\n\nSitemap: ${site}/sitemap.xml\n`,
       });
       this.emitFile({ type: 'asset', fileName: '.htaccess', source: htaccess(connect) });
+      // Vercel, déploiement de dist/ déjà construit (sans réglages de build).
+      this.emitFile({ type: 'asset', fileName: 'vercel.json', source: vercelJson(connect, site, { build: false }) });
       this.emitFile({
         type: 'asset',
         fileName: 'sitemap.xml',
@@ -94,7 +87,7 @@ export default defineConfig(({ mode }) => {
   // Adresse publique du site (balise canonical, Open Graph, sitemap)
   const site = (env.VITE_SITE_URL || 'https://kiess.fr').replace(/\/+$/, '');
   // Ce que la page peut appeler en plus d'elle-même : l'API Kiess et le stockage des photos
-  const connect = [...origin(env.VITE_API_URL), ...origin(env.VITE_UPLOADS_ORIGIN)];
+  const connect = connectOrigins(env);
   if (mode === 'production' && !env.VITE_API_URL) {
     console.warn('\n⚠  VITE_API_URL vide : l’inscription du site sera en mode démo (aucun compte créé).\n');
   }
