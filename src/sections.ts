@@ -16,6 +16,7 @@ export function mountLogos() {
     else if (kind === 'mark-white') n.innerHTML = svgLogo('mark', '#fff');
     else if (kind === 'mark-gradient') n.innerHTML = svgLogo('mark', 'gradient');
     else if (kind === 'mark-faint') n.innerHTML = svgLogo('mark', '#f1e4e8');
+    else if (kind === 'mark-current') n.innerHTML = svgLogo('mark', 'currentColor');
     n.querySelector('svg')?.setAttribute('aria-hidden', 'true');
   });
 }
@@ -139,43 +140,13 @@ export function initTilt() {
   });
 }
 
-// ─── 01 Radar ───────────────────────────────────────────────────────────
-const SILHOUETTE = `<svg viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="14" r="7"/><path d="M13 13c0-7 14-7 14 0v9M13 13v9"/><path d="M7 37c1.5-7 7-10 13-10s11.5 3 13 10"/></svg>`;
-
-export function initRadar() {
-  const host = document.getElementById('radarCards')!;
-  const cards = [
-    { x: 50, y: 12, pct: 78, z: 70 },
-    { x: 26, y: 20.5, pct: 80, z: 40 },
-    { x: 74, y: 20.5, pct: 84, z: 55 },
-    { x: 50, y: 29.5, pct: 85, z: 95 },
-    { x: 26, y: 39, pct: 87, z: 60 },
-    { x: 74, y: 39, pct: 88, z: 45 },
-    { x: 50, y: 47, pct: 90, z: 80 },
-  ];
-  host.innerHTML = cards
-    .map(
-      (c) =>
-        `<div class="rcard"><div class="rcard-in">${SILHOUETTE}<b><span data-count="${c.pct}">0</span>%</b></div></div>`,
-    )
-    .join('');
-  // Positions via le CSSOM (pas d'attribut style : compatible avec la CSP du site)
-  host.querySelectorAll<HTMLElement>('.rcard').forEach((el, i) => {
-    el.style.left = `${cards[i].x}%`;
-    el.style.top = `${cards[i].y}%`;
-    el.style.setProperty('--z', `${cards[i].z}px`);
-  });
-  const els = host.querySelectorAll<HTMLElement>('.rcard-in');
-  const tl = gsap.timeline({
-    scrollTrigger: { trigger: '#radar', start: 'top 75%', toggleActions: 'play none none reverse' },
-  });
-  tl.from(els, { opacity: 0, y: 30, scale: 0.6, duration: 0.7, stagger: 0.09, ease: 'back.out(1.8)' });
-  els.forEach((card, i) => {
-    const n = card.querySelector<HTMLElement>('[data-count]')!;
-    const obj = { v: 0 };
-    tl.to(obj, { v: Number(n.dataset.count), duration: 1.1, ease: 'power2.out', onUpdate: () => (n.textContent = String(Math.round(obj.v))) }, 0.15 + i * 0.09);
-  });
-  gsap.fromTo('#matchmaking .tilt-stage', { rotationX: 30 }, { rotationX: 4, ease: 'none', scrollTrigger: { trigger: '#matchmaking', start: 'top bottom', end: 'center center', scrub: true } });
+// ─── 01 Matchmaking : l'iPhone de l'onglet Kiess se redresse au scroll ──
+export function initMatchmaking() {
+  gsap.fromTo(
+    '#matchmaking .tilt-stage',
+    { rotationX: 26, rotationY: -10, y: 40 },
+    { rotationX: 4, rotationY: -4, y: 0, ease: 'none', scrollTrigger: { trigger: '#matchmaking', start: 'top bottom', end: 'center center', scrub: true } },
+  );
 }
 
 // ─── 02 Slots : 3 discussions maximum ───────────────────────────────────
@@ -185,13 +156,14 @@ export function initSlots() {
   const count = document.getElementById('slotsCount')!;
   let filled = -1;
 
+  // Glissés sans rebond, comme les animations de la nouvelle interface
   gsap.from('#slotsBoard .slot', {
-    y: 50,
+    y: 40,
     opacity: 0,
-    rotationX: -40,
-    stagger: 0.1,
-    duration: 0.9,
-    ease: 'back.out(1.6)',
+    rotationX: -30,
+    stagger: 0.08,
+    duration: 0.8,
+    ease: 'power3.out',
     scrollTrigger: { trigger: '#slotsBoard', start: 'top 80%' },
   });
 
@@ -203,7 +175,7 @@ export function initSlots() {
       if (on === s.classList.contains('slot-full')) return;
       s.classList.toggle('slot-full', on);
       s.querySelector('.slot-name')!.textContent = on ? s.dataset.fill! : 'Vide';
-      if (on) gsap.fromTo(s.querySelector('.slot-ring'), { scale: 0.8 }, { scale: 1, duration: 0.6, ease: 'back.out(3)' });
+      if (on) gsap.fromTo(s.querySelector('.slot-ring'), { scale: 0.88 }, { scale: 1, duration: 0.5, ease: 'power3.out' });
     });
     count.textContent = String(n);
     const full = n >= 3;
@@ -248,9 +220,11 @@ export function initTicket(onMatch: () => void) {
   ];
   const labels: Record<string, string> = { cinema: 'Cinéma', jardinage: 'Jardinage', graffiti: 'Street art', vegetarien: 'Végétarien', 'jeux-papier': 'Jeux de société', casino: 'Casino' };
   const badgesHost = document.getElementById('ticketBadges')!;
-  badgesHost.innerHTML = badgeIds
-    .map((id) => `<span class="badge" title="${labels[id]}">${BADGES[id] ?? ''}<span class="sr-only">${labels[id]}</span></span>`)
-    .join('');
+  // Six badges puis le reste en pastille, comme sur la carte de l'app
+  badgesHost.innerHTML =
+    badgeIds
+      .map((id) => `<span class="badge" title="${labels[id]}">${BADGES[id] ?? ''}<span class="sr-only">${labels[id]}</span></span>`)
+      .join('') + `<span class="badge-more">+${30 - badgeIds.length}<span class="sr-only"> autres badges</span></span>`;
   badgesHost.querySelectorAll<HTMLElement>('.badge').forEach((el, i) => {
     el.style.setProperty('--a', grads[i][1]);
     el.style.setProperty('--b', grads[i][0]);
@@ -263,7 +237,9 @@ export function initTicket(onMatch: () => void) {
     audio.classList.toggle('playing', on);
   });
 
-  const pct = document.querySelector<HTMLElement>('#ticketCard [data-count]')!;
+  // Recto : le pourcentage et l'anneau de compatibilité se remplissent ensemble
+  const pct = document.querySelector<HTMLElement>('#pcardFront [data-count]')!;
+  const ring = document.querySelector<SVGCircleElement>('#pcardFront .pc-ring-val')!;
   const o = { v: 0 };
   gsap.fromTo(
     '#ticket .tilt-stage',
@@ -275,10 +251,72 @@ export function initTicket(onMatch: () => void) {
     start: 'top 70%',
     once: true,
     onEnter: () => {
-      gsap.to(o, { v: 87, duration: 1.4, ease: 'power3.out', onUpdate: () => (pct.textContent = String(Math.round(o.v))) });
+      gsap.to(o, {
+        v: 87,
+        duration: 1.4,
+        ease: 'power3.out',
+        onUpdate: () => {
+          pct.textContent = String(Math.round(o.v));
+          ring.style.setProperty('stroke-dashoffset', String(100 - o.v));
+        },
+      });
       audio.classList.add('playing');
       audio.setAttribute('aria-pressed', 'true');
     },
+  });
+
+  // Verso : détail du score, barres en largeur via le CSSOM (CSP sans style en ligne)
+  document.querySelectorAll<HTMLElement>('#pcBars li').forEach((li) => {
+    const v = Number(li.dataset.v);
+    const max = Number(li.dataset.max);
+    li.insertAdjacentHTML('beforeend', `<em>${v}<small>/${max}</small></em><i aria-hidden="true"></i>`);
+    li.querySelector<HTMLElement>('i')!.style.setProperty('--w', `${(v / max) * 100}%`);
+  });
+
+  // Retourner la carte : glisser, toucher la carte ou bouton « Glisse pour retourner »
+  const card = document.getElementById('ticketCard')!;
+  const front = document.getElementById('pcardFront')!;
+  const back = document.getElementById('pcardBack')!;
+  back.inert = true;
+  const flip = (focus = false) => {
+    const flipped = card.classList.toggle('is-flipped');
+    front.inert = flipped;
+    back.inert = !flipped;
+    front.setAttribute('aria-hidden', String(flipped));
+    back.setAttribute('aria-hidden', String(!flipped));
+    if (focus) (flipped ? back : front).querySelector<HTMLElement>('[data-flip]')?.focus({ preventScroll: true });
+  };
+  card.querySelectorAll<HTMLButtonElement>('[data-flip]').forEach((b) =>
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      flip(e.detail === 0); // clavier : le focus suit la face visible
+    }),
+  );
+  let startX = 0;
+  let startY = 0;
+  let tracking = false;
+  card.addEventListener('pointerdown', (e) => {
+    if ((e.target as HTMLElement).closest('button')) return;
+    tracking = true;
+    startX = e.clientX;
+    startY = e.clientY;
+    card.classList.add('is-dragging');
+    // Le relâchement revient à la carte même si le doigt en sort pendant le glissé
+    card.setPointerCapture(e.pointerId);
+  });
+  const end = (e: PointerEvent) => {
+    if (!tracking) return;
+    tracking = false;
+    card.classList.remove('is-dragging');
+    const dx = e.clientX - startX;
+    const dy = e.clientY - startY;
+    // Glissé horizontal franc, ou simple toucher
+    if ((Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)) || Math.hypot(dx, dy) < 6) flip();
+  };
+  card.addEventListener('pointerup', end);
+  card.addEventListener('pointercancel', () => {
+    tracking = false;
+    card.classList.remove('is-dragging');
   });
 
   const yes = document.getElementById('ticketYes') as HTMLButtonElement;
@@ -356,7 +394,7 @@ export function initChat() {
         ],
         onComplete: () => {
           tag.remove();
-          gsap.fromTo(chip, { scale: 1.3 }, { scale: 1, duration: 0.45, ease: 'back.out(3)' });
+          gsap.fromTo(chip, { scale: 1.2 }, { scale: 1, duration: 0.45, ease: 'power3.out' });
         },
       },
     );
