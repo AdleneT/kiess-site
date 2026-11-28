@@ -94,9 +94,8 @@ dans l’app ouvre le même compte, même si l’adresse saisie à l’inscripti
 [`api/src/legal/legal-content.ts`](https://github.com/kiess-app/Kiess/blob/main/api/src/legal/legal-content.ts) du dépôt de l’app :
 modifier d’abord le texte dans Kiess (et sa copie `mobile/legal/index.ts`), puis le recopier ici ;
 jamais les pages. La politique ajoute une section
-propre au site (connexion sociale, session temporaire, aucun cookie). **Les champs surlignés en
-jaune** (éditeur, adresse, SIRET, directeur de la publication, hébergeur de l’API, tribunal)
-**sont à compléter avant la mise en ligne.**
+propre au site (connexion sociale, session temporaire, aucun cookie). L’identité de l’éditeur (Aman Agency) et les hébergeurs reprennent les mentions légales publiées sur kiess.fr ;
+**seul le tribunal compétent (surligné en jaune) reste à compléter.**
 
 ## SEO, sécurité, données
 
@@ -185,6 +184,10 @@ blanc** : le beige « blanc cassé » de l’app est remplacé par du blanc et d
 avant la capture), iPhone 393 × 852 pt avec marges de sécurité, en 3×,
   réduite à 786 px de large. La barre d’état est dessinée par le site par-dessus.
 - `og-kiess.jpg` : capture du hero (vue 1600 × 840 réduite à 1200 × 630).
+- **Interrupteur « App en mode sombre »** (pastille fixe en bas à droite, `role="switch"`) : passe toutes les
+  maquettes en sombre (`:root[data-app-theme='dark']`, palette `LIQUID_DARK`) et affiche
+  `matchmakings-dark.webp` à la place de la capture claire. Rien n’est mémorisé (aucun stockage) : le site
+  s’ouvre toujours en clair.
 
 ## Accessibilité
 

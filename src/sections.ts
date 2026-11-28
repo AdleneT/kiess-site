@@ -516,39 +516,44 @@ export function initReveal(opts: { scrubVideo: boolean }) {
 
 // ─── 06 Jeux : éventail de cartes ───────────────────────────────────────
 export function initGames() {
+  const fan = document.getElementById('cardsFan')!;
   const cards = gsap.utils.toArray<HTMLElement>('#cardsFan .gcard');
+  // Mobile : grille 2 × 2 (CSS), simple apparition
+  if (matchMedia('(max-width: 820px)').matches) {
+    gsap.from(cards, { y: 30, opacity: 0, stagger: 0.08, duration: 0.7, ease: 'power3.out', scrollTrigger: { trigger: fan, start: 'top 85%' } });
+    return;
+  }
+  // Éventail centré, assez ouvert pour que chaque nom de jeu reste lisible
+  // (il déborde un peu de sa colonne ; réduit en CSS sur les écrans moyens)
+  const mid = (cards.length - 1) / 2;
+  const spread = 145;
   gsap.fromTo(
     cards,
     { rotation: 0, x: 0, y: 40, rotationY: 0 },
     {
-      rotation: (i) => (i - 1) * 16,
-      x: (i) => (i - 1) * 120,
-      y: (i) => Math.abs(i - 1) * 26,
-      rotationY: (i) => (i - 1) * -12,
+      rotation: (i) => (i - mid) * 9,
+      x: (i) => (i - mid) * spread,
+      y: (i) => Math.abs(i - mid) * 20,
+      rotationY: (i) => (i - mid) * -8,
       ease: 'none',
       scrollTrigger: { trigger: '#jeux', start: 'top 85%', end: 'center 55%', scrub: true },
     },
   );
 }
 
-// ─── Bandeau défilant (vitesse liée au scroll) ──────────────────────────
-export function initMarquee(getVelocity: () => number) {
-  const track = document.getElementById('marquee')!;
-  let x = 0;
-  let skew = 0;
-  // Largeur mesurée seulement quand elle change (pas à chaque image), et
-  // animation suspendue quand le bandeau est hors de l'écran.
-  let half = track.scrollWidth / 2;
-  new ResizeObserver(() => (half = track.scrollWidth / 2)).observe(track);
-  let visible = true;
-  new IntersectionObserver(([e]) => (visible = e.isIntersecting)).observe(track);
-  gsap.ticker.add((_t, dt) => {
-    if (!visible) return;
-    const v = getVelocity();
-    x -= (0.04 + Math.min(Math.abs(v) * 0.0006, 0.5)) * dt;
-    if (half > 0 && -x > half) x += half;
-    skew += (Math.max(-8, Math.min(8, v * 0.02)) - skew) * 0.1;
-    track.style.transform = `translate3d(${x}px,0,0) skewX(${-skew}deg)`;
+// ─── Interrupteur clair / sombre des maquettes de l'app ─────────────────
+export function initAppTheme() {
+  const btn = document.getElementById('appTheme') as HTMLButtonElement;
+  const root = document.documentElement;
+  let timer = 0;
+  btn.addEventListener('click', () => {
+    const dark = btn.getAttribute('aria-checked') !== 'true';
+    btn.setAttribute('aria-checked', String(dark));
+    root.classList.add('app-theme-anim');
+    if (dark) root.dataset.appTheme = 'dark';
+    else delete root.dataset.appTheme;
+    window.clearTimeout(timer);
+    timer = window.setTimeout(() => root.classList.remove('app-theme-anim'), 450);
   });
 }
 

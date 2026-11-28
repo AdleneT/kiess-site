@@ -131,18 +131,6 @@
         <a class="scroll-cue" href="#concept" aria-label="Défiler vers le concept"><span></span></a>
       </section>
 
-      <!-- BANDEAU -->
-      <div class="marquee" aria-hidden="true">
-        <div class="marquee-track" id="marquee">
-          <span>Découvrez qui vous rencontrez</span><i data-logo="mark-gradient"></i>
-          <span>La photo se mérite</span><i data-logo="mark-gradient"></i>
-          <span>Comptes vérifiés uniquement</span><i data-logo="mark-gradient"></i>
-          <span>Découvrez qui vous rencontrez</span><i data-logo="mark-gradient"></i>
-          <span>La photo se mérite</span><i data-logo="mark-gradient"></i>
-          <span>Comptes vérifiés uniquement</span><i data-logo="mark-gradient"></i>
-        </div>
-      </div>
-
       <!-- FILM (vidéo Higgsfield dans une tuile façon app) -->
       <section class="film" id="film" data-heart="0,0,0,0.4" data-heart-m="0,0,0,0.4">
         <div class="wrap">
@@ -189,6 +177,7 @@
                       <div class="iphone-bezel">
                         <div class="iphone-screen">
                           <img class="shot" src="/media/app/matchmakings.webp" alt="" width="393" height="852" loading="lazy" decoding="async" />
+                          <img class="shot shot-dark" src="/media/app/matchmakings-dark.webp" alt="" width="393" height="852" loading="lazy" decoding="async" />
                           <div class="app-status" aria-hidden="true">
                             <b>14:30</b>
                             <span class="sb">
@@ -434,11 +423,12 @@
           <div class="feature-copy">
             <p class="feature-num">06 <span class="soon">Bientôt</span></p>
             <h2 class="feature-title">Brise la glace en&nbsp;<span class="grad-text">jouant.</span></h2>
-            <p class="feature-text">Des parties en duo et en direct pour apprendre à se connaître autrement. KIESS x UNO, Ludo… et d’autres jeux à venir. Parce qu’un fou rire en dit souvent plus long qu’une bio.</p>
+            <p class="feature-text">Des parties en direct pour apprendre à se connaître autrement. KIESS Colors, KIESS Show, Ludo… et d’autres jeux à venir. Parce qu’un fou rire en dit souvent plus long qu’une bio.</p>
           </div>
           <div class="feature-visual">
             <div class="cards-fan" id="cardsFan">
-              <div class="gcard gcard-red"><span class="gc-corner">K?</span><div class="gc-mark" data-logo="mark-white"></div><p>KIESS x UNO</p></div>
+              <div class="gcard gcard-red"><span class="gc-corner">K?</span><div class="gc-colors" aria-hidden="true"><i></i><i></i><i></i><i></i></div><p>KIESS Colors</p></div>
+              <div class="gcard gcard-show"><span class="gc-corner">K?</span><div class="gc-show" aria-hidden="true"><span class="gc-photo"><i></i><i></i><i></i><i></i></span><span class="gc-photo"><i></i><i></i><i></i><i></i></span><span class="gc-mic"><svg viewBox="0 0 24 24"><rect x="9" y="3.5" width="6" height="11" rx="3" /><path d="M5.8 11.4a6.2 6.2 0 0 0 12.4 0M12 17.6v2.9" /></svg></span></div><p>KIESS Show</p></div>
               <div class="gcard gcard-gold"><span class="gc-corner">K?</span><div class="gc-dice" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><p>Ludo</p></div>
               <div class="gcard gcard-white"><span class="gc-corner">K?</span><div class="gc-q">?</div><p>À venir</p></div>
             </div>
@@ -542,6 +532,13 @@
     </footer>
 
     <!-- INSCRIPTION : même parcours et même compte que l'app (src/signup/) -->
+    <!-- Interrupteur des maquettes de l'app : mode clair / mode sombre (comme Réglages › Mode sombre) -->
+    <button class="app-theme" id="appTheme" type="button" role="switch" aria-checked="false">
+      <span class="at-ico" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M20 14.6A8.2 8.2 0 0 1 9.4 4a8.2 8.2 0 1 0 10.6 10.6Z" /></svg></span>
+      <span class="at-label">App en mode sombre</span>
+      <span class="at-switch" aria-hidden="true"><i></i></span>
+    </button>
+
     <dialog class="beta-dialog" id="signupDialog" aria-labelledby="signupTitle">
       <div class="bd-card">
         <div class="bd-top">

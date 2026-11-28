@@ -17,6 +17,7 @@ import {
   initManifesto,
   initTilt,
   initMatchmaking,
+  initAppTheme,
   initFilm,
   initHeroMockup,
   initSlots,
@@ -24,7 +25,6 @@ import {
   initChat,
   initReveal,
   initGames,
-  initMarquee,
   initCursor,
 } from './sections';
 
@@ -190,7 +190,7 @@ const sectionsReady = (async () => {
     () => initReveal({ scrubVideo: !isMobile && !reducedMotion }),
     initGames,
     initTilt,
-    () => initMarquee(() => velocity),
+    initAppTheme,
     initCursor,
   ];
   for (const step of steps) {
