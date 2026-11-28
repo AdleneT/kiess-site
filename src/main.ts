@@ -16,7 +16,8 @@ import {
   mountLogos,
   initManifesto,
   initTilt,
-  initRadar,
+  initMatchmaking,
+  initAppTheme,
   initFilm,
   initHeroMockup,
   initSlots,
@@ -24,7 +25,6 @@ import {
   initChat,
   initReveal,
   initGames,
-  initMarquee,
   initCursor,
 } from './sections';
 
@@ -183,14 +183,14 @@ const sectionsReady = (async () => {
     () => initHeroMockup(reducedMotion),
     () => initFilm(heroVideo, reducedMotion),
     initManifesto,
-    initRadar,
+    initMatchmaking,
     initSlots,
     () => initTicket(() => scene?.excite(1)),
     initChat,
     () => initReveal({ scrubVideo: !isMobile && !reducedMotion }),
     initGames,
     initTilt,
-    () => initMarquee(() => velocity),
+    initAppTheme,
     initCursor,
   ];
   for (const step of steps) {

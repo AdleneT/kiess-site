@@ -94,9 +94,8 @@ dans l’app ouvre le même compte, même si l’adresse saisie à l’inscripti
 [`api/src/legal/legal-content.ts`](https://github.com/kiess-app/Kiess/blob/main/api/src/legal/legal-content.ts) du dépôt de l’app :
 modifier d’abord le texte dans Kiess (et sa copie `mobile/legal/index.ts`), puis le recopier ici ;
 jamais les pages. La politique ajoute une section
-propre au site (connexion sociale, session temporaire, aucun cookie). **Les champs surlignés en
-jaune** (éditeur, adresse, SIRET, directeur de la publication, hébergeur de l’API, tribunal)
-**sont à compléter avant la mise en ligne.**
+propre au site (connexion sociale, session temporaire, aucun cookie). L’identité de l’éditeur (Aman Agency) et les hébergeurs reprennent les mentions légales publiées sur kiess.fr ;
+**seul le tribunal compétent (surligné en jaune) reste à compléter.**
 
 ## SEO, sécurité, données
 
@@ -142,7 +141,7 @@ kiess-site/
 └── src/
     ├── main.ts             Orchestration : Lenis, chargement, trajet du logo 3D au scroll, intro
     ├── three/scene.ts      Scène WebGL (chargée à part) : logo K? 3D extrudé depuis l'EPS, petits cœurs, halo
-    ├── sections.ts         Film, radar, slots, ticket, chat, grille de révélation, jeux, curseur…
+    ├── sections.ts         Film, matchmaking, slots, carte de profil, chat, grille de révélation, jeux, curseur…
     ├── signup/flow.ts      Parcours d’inscription (étapes de l’app, erreurs, photo)
     ├── signup/api.ts       Routes de l’API Kiess (seul fichier qui parle à l’API)
     ├── signup/oauth.ts     Apple / Google / Facebook / Discord (redirection, state, nonce)
@@ -169,6 +168,26 @@ fraction de la hauteur ; `taille = 0` masque le logo.
 
 Prompts exacts dans `media-src/*.json`. Personnes fictives générées par IA (mentionné dans
 les mentions légales).
+
+## Visuels de l’app
+
+Les écrans de l’app reprennent la **nouvelle interface** en **mode clair** (aplats, verre presque plat ;
+jetons `--app-*` de `style.css`, d’après la palette `LIQUID_LIGHT` de Kiess `mobile/theme.ts`), **sur fond
+blanc** : le beige « blanc cassé » de l’app est remplacé par du blanc et des gris neutres, à la demande :
+
+- **Maquettes animées en HTML/CSS** (hero, slots, carte de profil recto/verso, chat, grille de
+  révélation) : elles gardent la persona du site (Juliette, 22 ans, Lyon, 87 %). Le rouge exact de
+  l’app (`--app-accent`) sert aux cases et aux icônes ; sous un texte blanc, `--app-accent-strong`
+  (un peu plus profond) garde le contraste AA.
+- **Capture réelle** `public/media/app/matchmakings.webp` (onglet Kiess, « Matchmaking en vedette ») :
+  démo web de l’app (`EXPO_PUBLIC_DEMO=1`, Réglages › Mode sombre désactivé, fonds beiges repeints en blanc
+avant la capture), iPhone 393 × 852 pt avec marges de sécurité, en 3×,
+  réduite à 786 px de large. La barre d’état est dessinée par le site par-dessus.
+- `og-kiess.jpg` : capture du hero (vue 1600 × 840 réduite à 1200 × 630).
+- **Interrupteur « App en mode sombre »** (pastille fixe en bas à droite, `role="switch"`) : passe toutes les
+  maquettes en sombre (`:root[data-app-theme='dark']`, palette `LIQUID_DARK`) et affiche
+  `matchmakings-dark.webp` à la place de la capture claire. Rien n’est mémorisé (aucun stockage) : le site
+  s’ouvre toujours en clair.
 
 ## Accessibilité
 

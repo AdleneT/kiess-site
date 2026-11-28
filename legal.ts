@@ -12,14 +12,14 @@ import { CGU_TEXT, LEGAL_LAST_UPDATE, PRIVACY_TEXT } from './legal-content';
 
 const SUPPORT = '<a href="mailto:support@kiess.fr">support@kiess.fr</a>';
 
-/** Valeurs des {{…}} : l'identité de l'éditeur reste à compléter (surlignée en jaune). */
+/** Valeurs des {{…}} : identité de l'éditeur reprise des mentions légales de kiess.fr ; le tribunal reste à compléter (surligné en jaune). */
 const PLACEHOLDERS: Record<string, string> = {
-  COMPANY: '<span class="todo">[Raison sociale ou nom de l’éditeur]</span>',
-  ADDRESS: '<span class="todo">[Adresse du siège]</span>',
+  COMPANY: 'Aman Agency (société en cours d’immatriculation)',
+  ADDRESS: 'Paris 16e (75016 Paris), France',
   CONTACT_EMAIL: SUPPORT,
   DPO_EMAIL: SUPPORT,
   COUNTRY: '<span class="todo">[Ville du tribunal compétent]</span>',
-  HOST_PROVIDER: '<span class="todo">[Hébergeur de l’API]</span>',
+  HOST_PROVIDER: 'Render Services, Inc., centre de données de Francfort (Allemagne)',
 };
 
 const ACRONYMS = ['RGPD', 'DPO', 'CNIL', 'OTP', 'UE'];
